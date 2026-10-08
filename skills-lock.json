@@ -1,0 +1,59 @@
+{
+  "version": 1,
+  "skills": {
+    "cloudflare": {
+      "source": "cloudflare/skills",
+      "sourceType": "github",
+      "skillPath": "skills/cloudflare/SKILL.md",
+      "computedHash": "f739fa8d40ea2f716855386ff8f0f17e7802262f8c3ea21f5941ccbd100899d0"
+    },
+    "cloudinary-docs": {
+      "source": "cloudinary-devs/skills",
+      "sourceType": "github",
+      "skillPath": "skills/platform/cloudinary-docs/SKILL.md",
+      "computedHash": "7dc9abb55191801b0699b86620e48d3cc6dd2218c25c9d914fb19e37be3fdec8"
+    },
+    "cloudinary-transformations": {
+      "source": "cloudinary-devs/skills",
+      "sourceType": "github",
+      "skillPath": "skills/platform/cloudinary-transformations/SKILL.md",
+      "computedHash": "1fbf92c9768d403c9218eb32cf0db767183809dcf48b9cfa3e930b2809ca0996"
+    },
+    "email-and-password-best-practices": {
+      "source": "better-auth/skills",
+      "sourceType": "github",
+      "skillPath": "better-auth/emailAndPassword/SKILL.md",
+      "computedHash": "ac9f9b0a549390f157ec62f5421a0bc90ac622c7e425af13155953847e0b68ea"
+    },
+    "firebase-basics": {
+      "source": "firebase/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/firebase-basics/SKILL.md",
+      "computedHash": "da332fddfde589f5a4fc275562db97d7674893086d6827546c7911eaac71b7d6"
+    },
+    "kkiapay": {
+      "source": "Perempty/kkiapay-skill",
+      "sourceType": "github",
+      "skillPath": "kkiapay/SKILL.md",
+      "computedHash": "6f35d328a9287b4a4b017e936c5ef8887afef07d929e7634289e16347b25228e"
+    },
+    "mongodb-query-optimizer": {
+      "source": "mongodb/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/mongodb-query-optimizer/SKILL.md",
+      "computedHash": "dad6bb8b3b21d75b59b18e326d780b55ad849a9c3110ad44ee23d1856130a79a"
+    },
+    "nestjs-best-practices": {
+      "source": "kadajett/agent-nestjs-skills",
+      "sourceType": "github",
+      "skillPath": "skills/nestjs-best-practices/SKILL.md",
+      "computedHash": "29c326e77d1462ed9526996acae5da0cf4003146982abc8c67378f5dbad6b181"
+    },
+    "push-notification-setup": {
+      "source": "secondsky/claude-skills",
+      "sourceType": "github",
+      "skillPath": "plugins/push-notification-setup/skills/push-notification-setup/SKILL.md",
+      "computedHash": "d213ec048dc378c7441b9166ab1d11906661df07a219c59842b3ae56a2c095f6"
+    }
+  }
+}

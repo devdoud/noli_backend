@@ -1,0 +1,3958 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/": {
+      "get": {
+        "operationId": "AppController_getHello",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "App"
+        ]
+      }
+    },
+    "/users/register": {
+      "post": {
+        "description": "Crée un nouveau compte utilisateur. Le rôle par défaut est `user`.",
+        "operationId": "UsersController_register",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateUserDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Compte créé avec succès",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegisterResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Données invalides (email déjà utilisé, champs manquants...)"
+          }
+        },
+        "summary": "Inscription",
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/users/me/avatar": {
+      "put": {
+        "description": "Champ multipart \"file\" : JPEG, PNG ou WebP, 5 Mo au plus, au moins 200 × 200 px. Recadré en carré centré sur le visage (400 px au plus). Remplace et supprime l’ancien avatar.",
+        "operationId": "UsersController_uploadAvatar",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                },
+                "required": [
+                  "file"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Avatar mis à jour"
+          },
+          "400": {
+            "description": "Fichier manquant, illisible, trop petit, trop étiré ou plus de 25 mégapixels"
+          },
+          "401": {
+            "description": "Non authentifié"
+          },
+          "409": {
+            "description": "L’avatar a changé entre temps"
+          },
+          "413": {
+            "description": "Fichier de plus de 5 Mo"
+          },
+          "415": {
+            "description": "Pas un JPEG, PNG ou WebP, ou image animée"
+          },
+          "429": {
+            "description": "Trop de requêtes images (10 par 10 minutes)"
+          },
+          "503": {
+            "description": "Service d’images indisponible"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Téléverser mon avatar",
+        "tags": [
+          "Users"
+        ]
+      },
+      "delete": {
+        "operationId": "UsersController_removeAvatar",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Avatar retiré"
+          },
+          "401": {
+            "description": "Non authentifié"
+          },
+          "409": {
+            "description": "L’avatar a changé entre temps"
+          },
+          "429": {
+            "description": "Trop de requêtes images (10 par 10 minutes)"
+          },
+          "503": {
+            "description": "Service d’images indisponible"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Retirer mon avatar",
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/users/{id}": {
+      "get": {
+        "description": "Retourne le profil complet d'un utilisateur via son identifiant MongoDB.",
+        "operationId": "UsersController_findById",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "ID MongoDB de l'utilisateur",
+            "schema": {
+              "example": "665f1b2c3d4e5f6789abcdef",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Utilisateur trouvé",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Non authentifié"
+          },
+          "404": {
+            "description": "Utilisateur introuvable"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Obtenir un utilisateur par ID",
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/users": {
+      "get": {
+        "description": "Retourne la liste complète des utilisateurs (usage admin recommandé).",
+        "operationId": "UsersController_findAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Liste des utilisateurs",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UsersListResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Non authentifié"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Lister tous les utilisateurs",
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "description": "Authentifie un utilisateur et retourne un access token + refresh token.",
+        "operationId": "AuthController_login",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Connexion réussie",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Email ou mot de passe incorrect"
+          }
+        },
+        "summary": "Login",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/auth/refresh": {
+      "post": {
+        "description": "Génère un nouvel access token à partir d'un refresh token valide.",
+        "operationId": "AuthController_refresh",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "refreshToken"
+                ],
+                "properties": {
+                  "refreshToken": {
+                    "type": "string",
+                    "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Nouveau token généré",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RefreshResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Refresh token invalide ou expiré"
+          }
+        },
+        "summary": "Rafraîchir le token",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/auth/profile": {
+      "get": {
+        "description": "Retourne les informations de l'utilisateur authentifié via le token JWT.",
+        "operationId": "AuthController_getProfile",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Profil récupéré avec succès"
+          },
+          "401": {
+            "description": "Token manquant ou invalide"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Profil utilisateur connecté",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/auth/password/forgot": {
+      "post": {
+        "description": "Envoie un code à 6 chiffres valable 15 minutes à l’email, si un compte existe. La réponse est toujours la même, que le compte existe ou non. Une nouvelle demande annule le code précédent. Limites silencieuses : 1 par minute, 5 par heure et 10 par jour pour un même compte.",
+        "operationId": "PasswordResetController_forgot",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ForgotPasswordDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Demande prise en compte",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForgotPasswordResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Email mal formé"
+          },
+          "429": {
+            "description": "Plus de 20 demandes par heure depuis cette adresse IP"
+          },
+          "503": {
+            "description": "Service email indisponible (code MAIL_UNAVAILABLE)"
+          }
+        },
+        "summary": "Mot de passe oublié : demander un code",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/auth/password/verify-code": {
+      "post": {
+        "description": "Échange le bon code contre un jeton de réinitialisation valable 10 minutes, utilisable une seule fois. 5 codes faux annulent la demande. Toute erreur répond la même chose : 400 INVALID_OR_EXPIRED_CODE.",
+        "operationId": "PasswordResetController_verifyCode",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyResetCodeDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Code vérifié",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VerifyResetCodeResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Code invalide ou expiré (code INVALID_OR_EXPIRED_CODE)"
+          },
+          "429": {
+            "description": "Plus de 30 vérifications par heure depuis cette adresse IP"
+          }
+        },
+        "summary": "Mot de passe oublié : vérifier le code",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/auth/password/reset": {
+      "post": {
+        "description": "Change le mot de passe avec le jeton reçu de verify-code, déconnecte toutes les autres sessions et renvoie de nouveaux tokens (même forme que /auth/login). Un email confirme le changement.",
+        "operationId": "PasswordResetController_reset",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResetPasswordDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Mot de passe réinitialisé",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Jeton invalide, expiré ou déjà utilisé (code INVALID_OR_EXPIRED_TOKEN), ou mot de passe hors de 6 à 72 caractères"
+          }
+        },
+        "summary": "Mot de passe oublié : choisir le nouveau mot de passe",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/notifications/devices": {
+      "put": {
+        "description": "À appeler après la connexion et à chaque renouvellement du jeton FCM. Un même jeton n’est jamais dupliqué ; s’il appartenait à un autre compte, il passe au compte connecté. 10 appareils au plus par compte, les plus anciens sont retirés.",
+        "operationId": "NotificationsController_registerDevice",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterDeviceDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Appareil enregistré"
+          },
+          "400": {
+            "description": "Jeton ou plateforme invalide"
+          },
+          "401": {
+            "description": "Non authentifié"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Enregistrer ce téléphone pour les notifications",
+        "tags": [
+          "Notifications"
+        ]
+      },
+      "delete": {
+        "description": "Corps `{ token }`. Répond 200 même si le jeton n’existe pas ou appartient à un autre compte (rien n’est alors modifié).",
+        "operationId": "NotificationsController_unregisterDevice",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UnregisterDeviceDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Appareil retiré"
+          },
+          "400": {
+            "description": "Jeton manquant"
+          },
+          "401": {
+            "description": "Non authentifié"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Retirer ce téléphone (déconnexion)",
+        "tags": [
+          "Notifications"
+        ]
+      }
+    },
+    "/notifications/preferences": {
+      "get": {
+        "description": "Quatre interrupteurs, tous activés par défaut : newEpisodes, newSeries, premium, payment.",
+        "operationId": "NotificationsController_getPreferences",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Réglages"
+          },
+          "401": {
+            "description": "Non authentifié"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Réglages des notifications",
+        "tags": [
+          "Notifications"
+        ]
+      },
+      "patch": {
+        "description": "Envoyer un ou plusieurs booléens parmi newEpisodes, newSeries, premium, payment. Répond avec les quatre valeurs.",
+        "operationId": "NotificationsController_updatePreferences",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePrefsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Réglages à jour"
+          },
+          "400": {
+            "description": "Valeur non booléenne ou corps vide"
+          },
+          "401": {
+            "description": "Non authentifié"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Modifier les réglages des notifications",
+        "tags": [
+          "Notifications"
+        ]
+      }
+    },
+    "/notifications": {
+      "get": {
+        "description": "Notifications des 30 derniers jours, les plus récemment mises à jour d’abord, avec le nombre de non lues.",
+        "operationId": "NotificationsController_inbox",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 50,
+              "default": 20,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Liste paginée"
+          },
+          "401": {
+            "description": "Non authentifié"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Boîte de réception",
+        "tags": [
+          "Notifications"
+        ]
+      }
+    },
+    "/notifications/read-all": {
+      "post": {
+        "operationId": "NotificationsController_readAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Nombre de notifications mises à jour"
+          },
+          "401": {
+            "description": "Non authentifié"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Tout marquer comme lu",
+        "tags": [
+          "Notifications"
+        ]
+      }
+    },
+    "/notifications/test": {
+      "post": {
+        "description": "Pousse tout de suite une notification de test sur les appareils de l’admin connecté. Rien n’est ajouté à la boîte de réception.",
+        "operationId": "NotificationsController_test",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "{ devices, sent, failed }"
+          },
+          "401": {
+            "description": "Non authentifié"
+          },
+          "403": {
+            "description": "Réservé aux admins"
+          },
+          "503": {
+            "description": "Firebase non configuré (code PUSH_UNAVAILABLE)"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Envoyer une notification de test (admin)",
+        "tags": [
+          "Notifications"
+        ]
+      }
+    },
+    "/notifications/{id}/read": {
+      "patch": {
+        "operationId": "NotificationsController_read",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Notification lue"
+          },
+          "401": {
+            "description": "Non authentifié"
+          },
+          "404": {
+            "description": "Introuvable ou pas à toi"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Marquer une notification comme lue",
+        "tags": [
+          "Notifications"
+        ]
+      }
+    },
+    "/series": {
+      "post": {
+        "operationId": "SeriesController_createSeries",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSeriesDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Series created successfully"
+          },
+          "403": {
+            "description": "Forbidden - admin only"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Create a new series (admin only)",
+        "tags": [
+          "Series"
+        ]
+      },
+      "get": {
+        "operationId": "SeriesController_getAllSeries",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": 10,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Series list returned"
+          }
+        },
+        "summary": "Get all series (paginated)",
+        "tags": [
+          "Series"
+        ]
+      }
+    },
+    "/series/trending": {
+      "get": {
+        "operationId": "SeriesController_getTrendingSeries",
+        "parameters": [
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": 10,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Trending series returned"
+          }
+        },
+        "summary": "Get trending series",
+        "tags": [
+          "Series"
+        ]
+      }
+    },
+    "/series/search": {
+      "get": {
+        "operationId": "SeriesController_searchSeries",
+        "parameters": [
+          {
+            "name": "q",
+            "required": true,
+            "in": "query",
+            "description": "Search query",
+            "schema": {
+              "example": "breaking",
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": 10,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Search results returned"
+          }
+        },
+        "summary": "Search series by title",
+        "tags": [
+          "Series"
+        ]
+      }
+    },
+    "/series/{id}": {
+      "get": {
+        "description": "Les épisodes incluent `isFree` mais jamais `videoUrl` : utiliser la route `/play` pour lire un épisode.",
+        "operationId": "SeriesController_getSeriesById",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Series ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Series found"
+          },
+          "404": {
+            "description": "Series not found"
+          }
+        },
+        "summary": "Get series by ID",
+        "tags": [
+          "Series"
+        ]
+      },
+      "patch": {
+        "description": "Tous les champs sont optionnels : titre, description, images, langues, pays, année, statut, catégories, accès premium. note, votes et épisodes ne sont pas modifiables ici.",
+        "operationId": "SeriesController_updateSeries",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Series ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSeriesDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Série mise à jour"
+          },
+          "400": {
+            "description": "Aucun champ fourni ou valeur invalide"
+          },
+          "403": {
+            "description": "Forbidden - admin only"
+          },
+          "404": {
+            "description": "Series not found"
+          },
+          "409": {
+            "description": "Titre déjà utilisé par une autre série"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Modifier une série (admin uniquement)",
+        "tags": [
+          "Series"
+        ]
+      },
+      "delete": {
+        "description": "Also removes the series from every user’s watch history.",
+        "operationId": "SeriesController_deleteSeries",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Series ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Series deleted successfully"
+          },
+          "403": {
+            "description": "Forbidden - admin only"
+          },
+          "404": {
+            "description": "Series not found"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Delete a series (admin only)",
+        "tags": [
+          "Series"
+        ]
+      }
+    },
+    "/series/{id}/episodes/{seasonNumber}/{episodeNumber}/play": {
+      "get": {
+        "description": "Seul endpoint qui retourne `videoUrl`. Gratuit si la série est gratuite ou si l'épisode fait partie des `freeEpisodeCount` premiers épisodes lisibles (ordre saison puis épisode). Sinon, abonnement premium actif requis. Vidéo Cloudflare : `type: 'hls'`, `videoUrl` est un lien HLS (.m3u8) signé qui expire à `expiresAt` (2 × la durée + 1 h) ; redemander ce lien si le lecteur reçoit 401/403 ou à la reprise. Ancien lien collé : `type: 'direct'`, `expiresAt: null`.",
+        "operationId": "SeriesController_playEpisode",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Series ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "seasonNumber",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "episodeNumber",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": 1,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lien vidéo retourné"
+          },
+          "400": {
+            "description": "Numéro de saison ou d’épisode invalide"
+          },
+          "401": {
+            "description": "Non authentifié"
+          },
+          "403": {
+            "description": "Abonnement premium requis",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "statusCode": 403,
+                    "code": "PREMIUM_REQUIRED",
+                    "message": "Premium subscription required"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Série ou épisode introuvable, ou épisode sans vidéo prête"
+          },
+          "503": {
+            "description": "Lecture vidéo indisponible"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Lire un épisode (retourne le lien vidéo)",
+        "tags": [
+          "Series"
+        ]
+      }
+    },
+    "/series/{id}/access": {
+      "patch": {
+        "operationId": "SeriesController_updateAccess",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Series ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSeriesAccessDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Accès mis à jour"
+          },
+          "400": {
+            "description": "Aucun champ fourni ou valeur invalide"
+          },
+          "403": {
+            "description": "Forbidden - admin only"
+          },
+          "404": {
+            "description": "Series not found"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Changer l’accès premium d’une série (admin uniquement)",
+        "tags": [
+          "Series"
+        ]
+      }
+    },
+    "/series/{id}/episodes": {
+      "get": {
+        "operationId": "SeriesController_getEpisodes",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Series ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": 10,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Episodes returned"
+          }
+        },
+        "summary": "Get episodes of a series (paginated)",
+        "tags": [
+          "Series"
+        ]
+      },
+      "post": {
+        "operationId": "SeriesController_addEpisode",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Series ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateEpisodeDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Episode added successfully"
+          },
+          "403": {
+            "description": "Forbidden - admin only"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Add an episode to a series (admin only)",
+        "tags": [
+          "Series"
+        ]
+      }
+    },
+    "/series/{id}/rate": {
+      "post": {
+        "operationId": "SeriesController_rateSeries",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Series ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "rating": {
+                    "type": "number",
+                    "example": 4.5,
+                    "minimum": 0,
+                    "maximum": 5
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Series rated successfully"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Rate a series",
+        "tags": [
+          "Series"
+        ]
+      }
+    },
+    "/series/{id}/episodes/{seasonNumber}/{episodeNumber}": {
+      "patch": {
+        "description": "Saison et numéro d’épisode sont figés. Renommer un épisode met aussi à jour le titre dans l’historique des utilisateurs.",
+        "operationId": "SeriesController_updateEpisode",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Series ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "seasonNumber",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "episodeNumber",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": 1,
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateEpisodeDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Épisode mis à jour"
+          },
+          "400": {
+            "description": "Aucun champ fourni ou valeur invalide"
+          },
+          "403": {
+            "description": "Forbidden - admin only"
+          },
+          "404": {
+            "description": "Série ou épisode introuvable"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Modifier un épisode (admin uniquement)",
+        "tags": [
+          "Series"
+        ]
+      },
+      "delete": {
+        "description": "Suppression définitive. L’épisode est aussi retiré de l’historique de tous les utilisateurs. Le nombre d’épisodes gratuits reste le même (la limite se décale).",
+        "operationId": "SeriesController_deleteEpisode",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Series ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "seasonNumber",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "episodeNumber",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": 1,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Épisode supprimé"
+          },
+          "403": {
+            "description": "Forbidden - admin only"
+          },
+          "404": {
+            "description": "Série ou épisode introuvable"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Supprimer un épisode (admin uniquement)",
+        "tags": [
+          "Series"
+        ]
+      }
+    },
+    "/series/{id}/cover": {
+      "put": {
+        "description": "Champ multipart \"file\" : JPEG, PNG ou WebP, 5 Mo au plus, au moins 400 × 600 px. Recadrée en 2:3 (1000 px de large au plus). Remplace et supprime l’ancienne image.",
+        "operationId": "SeriesController_uploadCover",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Series ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                },
+                "required": [
+                  "file"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Couverture mise à jour"
+          },
+          "400": {
+            "description": "Fichier manquant, illisible, trop petit, trop étiré ou plus de 25 mégapixels"
+          },
+          "401": {
+            "description": "Non authentifié"
+          },
+          "403": {
+            "description": "Forbidden - admin only"
+          },
+          "404": {
+            "description": "Series not found"
+          },
+          "409": {
+            "description": "L’image a changé entre temps"
+          },
+          "413": {
+            "description": "Fichier de plus de 5 Mo"
+          },
+          "415": {
+            "description": "Pas un JPEG, PNG ou WebP, ou image animée"
+          },
+          "429": {
+            "description": "Trop de requêtes images (10 par 10 minutes)"
+          },
+          "503": {
+            "description": "Service d’images indisponible"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Téléverser la couverture d’une série (admin uniquement)",
+        "tags": [
+          "Series"
+        ]
+      },
+      "delete": {
+        "operationId": "SeriesController_removeCover",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Series ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Couverture retirée"
+          },
+          "401": {
+            "description": "Non authentifié"
+          },
+          "403": {
+            "description": "Forbidden - admin only"
+          },
+          "404": {
+            "description": "Series not found"
+          },
+          "409": {
+            "description": "L’image a changé entre temps"
+          },
+          "429": {
+            "description": "Trop de requêtes images (10 par 10 minutes)"
+          },
+          "503": {
+            "description": "Service d’images indisponible"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Retirer la couverture d’une série (admin uniquement)",
+        "tags": [
+          "Series"
+        ]
+      }
+    },
+    "/series/{id}/banner": {
+      "put": {
+        "description": "Champ multipart \"file\" : JPEG, PNG ou WebP, 5 Mo au plus, au moins 1280 × 720 px. Recadrée en 16:9 (1920 px de large au plus). Remplace et supprime l’ancienne image.",
+        "operationId": "SeriesController_uploadBanner",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Series ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                },
+                "required": [
+                  "file"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Bannière mise à jour"
+          },
+          "400": {
+            "description": "Fichier manquant, illisible, trop petit, trop étiré ou plus de 25 mégapixels"
+          },
+          "401": {
+            "description": "Non authentifié"
+          },
+          "403": {
+            "description": "Forbidden - admin only"
+          },
+          "404": {
+            "description": "Series not found"
+          },
+          "409": {
+            "description": "L’image a changé entre temps"
+          },
+          "413": {
+            "description": "Fichier de plus de 5 Mo"
+          },
+          "415": {
+            "description": "Pas un JPEG, PNG ou WebP, ou image animée"
+          },
+          "429": {
+            "description": "Trop de requêtes images (10 par 10 minutes)"
+          },
+          "503": {
+            "description": "Service d’images indisponible"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Téléverser la bannière d’une série (admin uniquement)",
+        "tags": [
+          "Series"
+        ]
+      },
+      "delete": {
+        "operationId": "SeriesController_removeBanner",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Series ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Bannière retirée"
+          },
+          "401": {
+            "description": "Non authentifié"
+          },
+          "403": {
+            "description": "Forbidden - admin only"
+          },
+          "404": {
+            "description": "Series not found"
+          },
+          "409": {
+            "description": "L’image a changé entre temps"
+          },
+          "429": {
+            "description": "Trop de requêtes images (10 par 10 minutes)"
+          },
+          "503": {
+            "description": "Service d’images indisponible"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Retirer la bannière d’une série (admin uniquement)",
+        "tags": [
+          "Series"
+        ]
+      }
+    },
+    "/series/{id}/episodes/{seasonNumber}/{episodeNumber}/thumbnail": {
+      "put": {
+        "description": "Champ multipart \"file\" : JPEG, PNG ou WebP, 5 Mo au plus, au moins 640 × 360 px. Recadrée en 16:9 (1280 px de large au plus).",
+        "operationId": "SeriesController_uploadEpisodeThumbnail",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Series ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "seasonNumber",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "episodeNumber",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": 1,
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                },
+                "required": [
+                  "file"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Vignette mise à jour"
+          },
+          "400": {
+            "description": "Fichier manquant, illisible, trop petit, trop étiré ou plus de 25 mégapixels"
+          },
+          "401": {
+            "description": "Non authentifié"
+          },
+          "403": {
+            "description": "Forbidden - admin only"
+          },
+          "404": {
+            "description": "Série ou épisode introuvable"
+          },
+          "409": {
+            "description": "L’image a changé entre temps"
+          },
+          "413": {
+            "description": "Fichier de plus de 5 Mo"
+          },
+          "415": {
+            "description": "Pas un JPEG, PNG ou WebP, ou image animée"
+          },
+          "429": {
+            "description": "Trop de requêtes images (10 par 10 minutes)"
+          },
+          "503": {
+            "description": "Service d’images indisponible"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Téléverser la vignette d’un épisode (admin uniquement)",
+        "tags": [
+          "Series"
+        ]
+      },
+      "delete": {
+        "operationId": "SeriesController_removeEpisodeThumbnail",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Series ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "seasonNumber",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "episodeNumber",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": 1,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Vignette retirée"
+          },
+          "400": {
+            "description": "Saison ou épisode non entier"
+          },
+          "401": {
+            "description": "Non authentifié"
+          },
+          "403": {
+            "description": "Forbidden - admin only"
+          },
+          "404": {
+            "description": "Série ou épisode introuvable"
+          },
+          "409": {
+            "description": "L’image a changé entre temps"
+          },
+          "429": {
+            "description": "Trop de requêtes images (10 par 10 minutes)"
+          },
+          "503": {
+            "description": "Service d’images indisponible"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Retirer la vignette d’un épisode (admin uniquement)",
+        "tags": [
+          "Series"
+        ]
+      }
+    },
+    "/series/{id}/admin": {
+      "get": {
+        "description": "Contrairement à GET /series/:id, inclut les épisodes sans vidéo prête, avec pour chacun `video.status` (ready, pending, error, legacy, none). Les liens d’envoi inutilisés et expirés passent en erreur au passage.",
+        "operationId": "SeriesController_getSeriesForAdmin",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Series ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Série complète"
+          },
+          "401": {
+            "description": "Non authentifié"
+          },
+          "403": {
+            "description": "Forbidden - admin only"
+          },
+          "404": {
+            "description": "Series not found"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Voir une série côté admin (tous les épisodes et leur vidéo)",
+        "tags": [
+          "Series"
+        ]
+      }
+    },
+    "/series/{id}/episodes/{seasonNumber}/{episodeNumber}/video/upload": {
+      "post": {
+        "description": "Retourne un lien à usage unique vers Cloudflare Stream, valable un peu moins de 6 h, pour une vidéo de 3 h au plus. method \"post\" (fichier ≤ 200 Mo) : envoyer le fichier en multipart (champ \"file\") en POST sur uploadUrl. method \"tus\" (> 200 Mo) : envoyer avec un client tus (morceaux multiples de 256 Kio, au moins 5 Mio sauf le dernier), reprenable en cas de coupure. L’épisode garde sa vidéo actuelle jusqu’à ce que la nouvelle soit prête.",
+        "operationId": "SeriesController_requestVideoUpload",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Series ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "seasonNumber",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "episodeNumber",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": 1,
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestVideoUploadDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "{ method, uploadUrl, uid, expiresAt }"
+          },
+          "400": {
+            "description": "Taille invalide, saison ou épisode non entier"
+          },
+          "401": {
+            "description": "Non authentifié"
+          },
+          "403": {
+            "description": "Forbidden - admin only"
+          },
+          "404": {
+            "description": "Série ou épisode introuvable"
+          },
+          "409": {
+            "description": "Une autre demande a été traitée entre temps"
+          },
+          "429": {
+            "description": "Trop de requêtes images (10 par 10 minutes)"
+          },
+          "503": {
+            "description": "Service vidéo indisponible"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Obtenir un lien d’envoi vidéo pour un épisode (admin)",
+        "tags": [
+          "Series"
+        ]
+      }
+    },
+    "/series/{id}/episodes/{seasonNumber}/{episodeNumber}/video/import": {
+      "post": {
+        "description": "Cloudflare télécharge lui même le fichier depuis un lien public https (par exemple là où la vidéo est hébergée aujourd’hui). Un lien inaccessible finit plus tard en `pendingStatus: error`.",
+        "operationId": "SeriesController_importVideo",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Series ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "seasonNumber",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "episodeNumber",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": 1,
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ImportVideoDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "{ uid, pendingStatus: processing }"
+          },
+          "400": {
+            "description": "Lien invalide (https requis) ou refusé par Cloudflare"
+          },
+          "401": {
+            "description": "Non authentifié"
+          },
+          "403": {
+            "description": "Forbidden - admin only"
+          },
+          "404": {
+            "description": "Série ou épisode introuvable"
+          },
+          "409": {
+            "description": "Une autre demande a été traitée entre temps"
+          },
+          "429": {
+            "description": "Trop de requêtes images (10 par 10 minutes)"
+          },
+          "503": {
+            "description": "Service vidéo indisponible"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Importer la vidéo d’un épisode depuis un lien (admin)",
+        "tags": [
+          "Series"
+        ]
+      }
+    },
+    "/series/{id}/episodes/{seasonNumber}/{episodeNumber}/video/refresh": {
+      "post": {
+        "description": "Demande directement à Cloudflare où en est la vidéo en attente (si un webhook a été manqué, ou en développement local), et expire un lien d’envoi inutilisé.",
+        "operationId": "SeriesController_refreshVideo",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Series ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "seasonNumber",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "episodeNumber",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": 1,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Série (vue admin) à jour"
+          },
+          "401": {
+            "description": "Non authentifié"
+          },
+          "403": {
+            "description": "Forbidden - admin only"
+          },
+          "404": {
+            "description": "Série ou épisode introuvable"
+          },
+          "429": {
+            "description": "Trop de requêtes images (10 par 10 minutes)"
+          },
+          "503": {
+            "description": "Service vidéo indisponible"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Rafraîchir l’état de la vidéo d’un épisode (admin)",
+        "tags": [
+          "Series"
+        ]
+      }
+    },
+    "/series/{id}/episodes/{seasonNumber}/{episodeNumber}/video": {
+      "delete": {
+        "description": "Retire la vidéo actuelle, celle en attente et un éventuel ancien lien collé, puis les supprime chez Cloudflare. L’épisode n’est plus visible des spectateurs.",
+        "operationId": "SeriesController_removeVideo",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Series ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "seasonNumber",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "episodeNumber",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": 1,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Vidéo retirée"
+          },
+          "401": {
+            "description": "Non authentifié"
+          },
+          "403": {
+            "description": "Forbidden - admin only"
+          },
+          "404": {
+            "description": "Série ou épisode introuvable"
+          },
+          "429": {
+            "description": "Trop de requêtes images (10 par 10 minutes)"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Retirer la vidéo d’un épisode (admin)",
+        "tags": [
+          "Series"
+        ]
+      }
+    },
+    "/categories": {
+      "get": {
+        "operationId": "CategoriesController_listVisible",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Catégories visibles"
+          }
+        },
+        "summary": "Lister les catégories visibles (ordre d’affichage)",
+        "tags": [
+          "Categories"
+        ]
+      },
+      "post": {
+        "operationId": "CategoriesController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCategoryDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Catégorie créée, placée en dernier"
+          },
+          "400": {
+            "description": "Nom invalide ou slug réservé"
+          },
+          "403": {
+            "description": "Forbidden - admin only"
+          },
+          "409": {
+            "description": "Une catégorie avec ce nom existe déjà"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Créer une catégorie (admin)",
+        "tags": [
+          "Categories"
+        ]
+      }
+    },
+    "/categories/all": {
+      "get": {
+        "operationId": "CategoriesController_listAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Toutes les catégories"
+          },
+          "403": {
+            "description": "Forbidden - admin only"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Lister toutes les catégories, masquées comprises (admin)",
+        "tags": [
+          "Categories"
+        ]
+      }
+    },
+    "/categories/{slug}": {
+      "get": {
+        "operationId": "CategoriesController_getBySlug",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "comedie-romantique",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Catégorie trouvée"
+          },
+          "404": {
+            "description": "Catégorie introuvable ou masquée"
+          }
+        },
+        "summary": "Obtenir une catégorie visible par son slug",
+        "tags": [
+          "Categories"
+        ]
+      }
+    },
+    "/categories/{slug}/series": {
+      "get": {
+        "description": "Tri `newest` (défaut) ou `rating`. Les séries n’incluent pas les épisodes.",
+        "operationId": "CategoriesController_getSeries",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "comedie-romantique",
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "example": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 50,
+              "default": 10,
+              "example": 10,
+              "type": "number"
+            }
+          },
+          {
+            "name": "sort",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": "newest",
+              "type": "string",
+              "enum": [
+                "newest",
+                "rating"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Séries de la catégorie"
+          },
+          "400": {
+            "description": "page, limit ou sort invalide"
+          },
+          "404": {
+            "description": "Catégorie introuvable ou masquée"
+          }
+        },
+        "summary": "Séries d’une catégorie (paginé)",
+        "tags": [
+          "Categories"
+        ]
+      }
+    },
+    "/categories/order": {
+      "put": {
+        "description": "Envoyer tous les ids, masqués compris, chacun une fois, dans le nouvel ordre.",
+        "operationId": "CategoriesController_reorder",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReorderCategoriesDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Nouvel ordre appliqué"
+          },
+          "400": {
+            "description": "Liste incomplète, inconnue ou en double"
+          },
+          "403": {
+            "description": "Forbidden - admin only"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Réordonner toutes les catégories (admin)",
+        "tags": [
+          "Categories"
+        ]
+      }
+    },
+    "/categories/{id}": {
+      "patch": {
+        "operationId": "CategoriesController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Category ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCategoryDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Catégorie mise à jour"
+          },
+          "400": {
+            "description": "Aucun champ fourni ou valeur invalide"
+          },
+          "403": {
+            "description": "Forbidden - admin only"
+          },
+          "404": {
+            "description": "Catégorie introuvable"
+          },
+          "409": {
+            "description": "Nom ou slug déjà utilisé"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Modifier une catégorie (admin)",
+        "tags": [
+          "Categories"
+        ]
+      },
+      "delete": {
+        "operationId": "CategoriesController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Category ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Catégorie supprimée"
+          },
+          "403": {
+            "description": "Forbidden - admin only"
+          },
+          "404": {
+            "description": "Catégorie introuvable"
+          },
+          "409": {
+            "description": "Catégorie encore utilisée par des séries",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "statusCode": 409,
+                    "code": "CATEGORY_IN_USE",
+                    "message": "Move or edit the series in this category before deleting it",
+                    "seriesCount": 3
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Supprimer une catégorie inutilisée (admin)",
+        "tags": [
+          "Categories"
+        ]
+      }
+    },
+    "/categories/{id}/image": {
+      "put": {
+        "description": "Champ multipart \"file\" : JPEG, PNG ou WebP, 5 Mo au plus, au moins 400 × 400 px. Recadrée en carré (800 px au plus). Remplace et supprime l’ancienne image.",
+        "operationId": "CategoriesController_uploadImage",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Category ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                },
+                "required": [
+                  "file"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Image mise à jour"
+          },
+          "400": {
+            "description": "Fichier manquant, illisible, trop petit, trop étiré ou plus de 25 mégapixels"
+          },
+          "401": {
+            "description": "Non authentifié"
+          },
+          "403": {
+            "description": "Forbidden - admin only"
+          },
+          "404": {
+            "description": "Catégorie introuvable"
+          },
+          "409": {
+            "description": "L’image a changé entre temps"
+          },
+          "413": {
+            "description": "Fichier de plus de 5 Mo"
+          },
+          "415": {
+            "description": "Pas un JPEG, PNG ou WebP, ou image animée"
+          },
+          "429": {
+            "description": "Trop de requêtes images (10 par 10 minutes)"
+          },
+          "503": {
+            "description": "Service d’images indisponible"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Téléverser l’image d’une catégorie (admin)",
+        "tags": [
+          "Categories"
+        ]
+      },
+      "delete": {
+        "operationId": "CategoriesController_removeImage",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Category ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Image retirée"
+          },
+          "401": {
+            "description": "Non authentifié"
+          },
+          "403": {
+            "description": "Forbidden - admin only"
+          },
+          "404": {
+            "description": "Catégorie introuvable"
+          },
+          "409": {
+            "description": "L’image a changé entre temps"
+          },
+          "429": {
+            "description": "Trop de requêtes images (10 par 10 minutes)"
+          },
+          "503": {
+            "description": "Service d’images indisponible"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Retirer l’image d’une catégorie (admin)",
+        "tags": [
+          "Categories"
+        ]
+      }
+    },
+    "/watch-history/add": {
+      "post": {
+        "operationId": "WatchHistoryController_addToWatchHistory",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddToWatchHistoryDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Episode added to watch history"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Add an episode to watch history",
+        "tags": [
+          "Watch History"
+        ]
+      }
+    },
+    "/watch-history": {
+      "get": {
+        "operationId": "WatchHistoryController_getWatchHistory",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "example": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 50,
+              "default": 10,
+              "example": 10,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Watch history returned"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Get watch history (paginated)",
+        "tags": [
+          "Watch History"
+        ]
+      },
+      "delete": {
+        "operationId": "WatchHistoryController_clearWatchHistory",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Watch history cleared"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Clear entire watch history",
+        "tags": [
+          "Watch History"
+        ]
+      }
+    },
+    "/watch-history/continue-watching": {
+      "get": {
+        "operationId": "WatchHistoryController_getContinueWatching",
+        "parameters": [
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 50,
+              "default": 5,
+              "example": 5,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Continue watching list returned"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Get \"Continue watching\" list",
+        "tags": [
+          "Watch History"
+        ]
+      }
+    },
+    "/watch-history/progress/{seriesId}/{episodeNumber}/{seasonNumber}": {
+      "patch": {
+        "operationId": "WatchHistoryController_updateProgress",
+        "parameters": [
+          {
+            "name": "seriesId",
+            "required": true,
+            "in": "path",
+            "description": "Series ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "episodeNumber",
+            "required": true,
+            "in": "path",
+            "description": "Episode number",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "seasonNumber",
+            "required": true,
+            "in": "path",
+            "description": "Season number",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "progressPercentage": {
+                    "type": "number",
+                    "example": 65,
+                    "minimum": 0,
+                    "maximum": 100
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Progress updated"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Update episode watch progress",
+        "tags": [
+          "Watch History"
+        ]
+      }
+    },
+    "/watch-history/{seriesId}/{episodeNumber}/{seasonNumber}": {
+      "delete": {
+        "operationId": "WatchHistoryController_removeFromHistory",
+        "parameters": [
+          {
+            "name": "seriesId",
+            "required": true,
+            "in": "path",
+            "description": "Series ID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "episodeNumber",
+            "required": true,
+            "in": "path",
+            "description": "Episode number",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "seasonNumber",
+            "required": true,
+            "in": "path",
+            "description": "Season number",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Episode removed from history"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Remove an episode from watch history",
+        "tags": [
+          "Watch History"
+        ]
+      }
+    },
+    "/webhooks/cloudflare-stream": {
+      "post": {
+        "description": "Appelé par Cloudflare quand une vidéo est prête ou en erreur. Signé (en-tête Webhook-Signature, HMAC SHA256 du corps brut). Pas destiné aux clients.",
+        "operationId": "StreamWebhookController_receive",
+        "parameters": [
+          {
+            "name": "Webhook-Signature",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Événement reçu"
+          },
+          "401": {
+            "description": "Signature absente, invalide ou trop ancienne"
+          },
+          "503": {
+            "description": "Secret du webhook non configuré"
+          }
+        },
+        "summary": "Webhook Cloudflare Stream (fin de traitement d’une vidéo)",
+        "tags": [
+          "Webhooks"
+        ]
+      }
+    },
+    "/recommendations/for-me": {
+      "get": {
+        "operationId": "RecommendationsController_getRecommendationsForMe",
+        "parameters": [
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 50,
+              "default": 10,
+              "example": 10,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Personalized recommendations returned"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Get personalized recommendations for the logged-in user",
+        "tags": [
+          "Recommendations"
+        ]
+      }
+    },
+    "/recommendations/popular": {
+      "get": {
+        "operationId": "RecommendationsController_getPopularSeries",
+        "parameters": [
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 50,
+              "default": 10,
+              "example": 10,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Popular series returned"
+          }
+        },
+        "summary": "Get popular series",
+        "tags": [
+          "Recommendations"
+        ]
+      }
+    },
+    "/recommendations/trending": {
+      "get": {
+        "operationId": "RecommendationsController_getTrendingNow",
+        "parameters": [
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 50,
+              "default": 10,
+              "example": 10,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Trending series returned"
+          }
+        },
+        "summary": "Get trending series",
+        "tags": [
+          "Recommendations"
+        ]
+      }
+    },
+    "/recommendations/top-rated": {
+      "get": {
+        "operationId": "RecommendationsController_getTopRatedSeries",
+        "parameters": [
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 50,
+              "default": 10,
+              "example": 10,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Top rated series returned"
+          }
+        },
+        "summary": "Get top rated series",
+        "tags": [
+          "Recommendations"
+        ]
+      }
+    },
+    "/recommendations/new": {
+      "get": {
+        "operationId": "RecommendationsController_getNewSeries",
+        "parameters": [
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 50,
+              "default": 10,
+              "example": 10,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "New series returned"
+          }
+        },
+        "summary": "Get new series",
+        "tags": [
+          "Recommendations"
+        ]
+      }
+    },
+    "/recommendations/similar/{seriesId}": {
+      "get": {
+        "operationId": "RecommendationsController_getSimilarSeries",
+        "parameters": [
+          {
+            "name": "seriesId",
+            "required": true,
+            "in": "path",
+            "description": "Series ID to find similar content for",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 50,
+              "default": 10,
+              "example": 5,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Similar series returned"
+          }
+        },
+        "summary": "Get series similar to a given one",
+        "tags": [
+          "Recommendations"
+        ]
+      }
+    },
+    "/recommendations/category/{slug}": {
+      "get": {
+        "operationId": "RecommendationsController_getCategoryRecommendations",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "description": "Slug de catégorie",
+            "schema": {
+              "example": "comedie-romantique",
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 50,
+              "default": 10,
+              "example": 10,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Category recommendations returned"
+          },
+          "404": {
+            "description": "Catégorie introuvable ou masquée"
+          }
+        },
+        "summary": "Meilleures séries d’une catégorie",
+        "tags": [
+          "Recommendations"
+        ]
+      }
+    },
+    "/billing/webhook": {
+      "post": {
+        "operationId": "BillingController_webhook",
+        "parameters": [
+          {
+            "name": "x-kkiapay-secret",
+            "in": "header",
+            "description": "Secret configuré sur le dashboard KkiaPay",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/KkiapayWebhookDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Événement reçu (traité, rejeté, ou ignoré selon le cas)"
+          },
+          "401": {
+            "description": "Signature invalide"
+          },
+          "500": {
+            "description": "Échec de traitement, KkiaPay réessaiera"
+          }
+        },
+        "summary": "Webhook KkiaPay : confirmation asynchrone d'une transaction",
+        "tags": [
+          "Billing"
+        ]
+      }
+    },
+    "/billing/dev/pending-checkout": {
+      "post": {
+        "description": "Seed un PendingCheckout directement, en attendant que la fonctionnalité de paiement (checkout) existe. Indisponible en production.",
+        "operationId": "BillingController_createDevPendingCheckout",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDevPendingCheckoutDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Paiement en attente créé"
+          },
+          "401": {
+            "description": "Non authentifié"
+          },
+          "403": {
+            "description": "Indisponible en production"
+          }
+        },
+        "security": [
+          {
+            "JWT-auth": []
+          }
+        ],
+        "summary": "Créer un paiement en attente (développement uniquement)",
+        "tags": [
+          "Billing"
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "Noli API",
+    "description": "## API REST de la plateforme Noli\n\nNoli est une plateforme de streaming de séries. Cette API gère :\n- 🔐 **Authentification** — JWT (access + refresh token)\n- 👤 **Utilisateurs** — inscription, profil, rôles\n- 🎬 **Séries & épisodes** — CRUD, recherche, notation\n- 📺 **Historique de visionnage** — suivi de progression\n- 🎯 **Recommandations** — personnalisées et par genre\n- 💳 **Billing** — paiements KkiaPay et webhook\n\n### Authentification\nLes endpoints protégés nécessitent un **Bearer token** JWT.\nObtenez-le via `POST /auth/login`, puis cliquez sur **Authorize** en haut à droite.",
+    "version": "1.0",
+    "contact": {
+      "name": "Noli Team",
+      "url": "",
+      "email": "bouraimawadoud@gmail.com"
+    }
+  },
+  "tags": [],
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": "Local"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "JWT-auth": {
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "type": "http",
+        "name": "Authorization",
+        "description": "Entrez votre JWT token",
+        "in": "header"
+      }
+    },
+    "schemas": {
+      "CreateUserDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "example": "user@example.com"
+          },
+          "username": {
+            "type": "string",
+            "example": "johndoe",
+            "minLength": 3,
+            "maxLength": 30
+          },
+          "password": {
+            "type": "string",
+            "example": "secret123",
+            "minLength": 6
+          },
+          "firstName": {
+            "type": "string",
+            "example": "John"
+          },
+          "lastName": {
+            "type": "string",
+            "example": "Doe"
+          }
+        },
+        "required": [
+          "email",
+          "username",
+          "password"
+        ]
+      },
+      "SubscriptionDto": {
+        "type": "object",
+        "properties": {
+          "plan": {
+            "type": "string",
+            "example": "free",
+            "enum": [
+              "free",
+              "premium"
+            ]
+          },
+          "isActive": {
+            "type": "boolean",
+            "example": true
+          },
+          "startDate": {
+            "format": "date-time",
+            "type": "string",
+            "example": "2026-09-01T00:00:00.000Z"
+          },
+          "endDate": {
+            "format": "date-time",
+            "type": "string",
+            "example": "2027-09-01T00:00:00.000Z"
+          }
+        },
+        "required": [
+          "plan",
+          "isActive"
+        ]
+      },
+      "UserDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "665f1b2c3d4e5f6789abcdef"
+          },
+          "email": {
+            "type": "string",
+            "example": "user@example.com"
+          },
+          "username": {
+            "type": "string",
+            "example": "johndoe"
+          },
+          "firstName": {
+            "type": "string",
+            "example": "John"
+          },
+          "lastName": {
+            "type": "string",
+            "example": "Doe"
+          },
+          "avatar": {
+            "type": "string",
+            "example": "https://cdn.example.com/avatar.jpg"
+          },
+          "role": {
+            "type": "string",
+            "example": "user",
+            "enum": [
+              "user",
+              "admin"
+            ]
+          },
+          "subscription": {
+            "$ref": "#/components/schemas/SubscriptionDto"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string",
+            "example": "2026-09-13T10:00:00.000Z"
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "username",
+          "role",
+          "subscription",
+          "createdAt"
+        ]
+      },
+      "RegisterResponseDto": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "User registered successfully"
+          },
+          "user": {
+            "$ref": "#/components/schemas/UserDto"
+          }
+        },
+        "required": [
+          "message",
+          "user"
+        ]
+      },
+      "UsersListResponseDto": {
+        "type": "object",
+        "properties": {
+          "count": {
+            "type": "number",
+            "example": 42
+          },
+          "users": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UserDto"
+            }
+          }
+        },
+        "required": [
+          "count",
+          "users"
+        ]
+      },
+      "LoginDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "example": "user@example.com"
+          },
+          "password": {
+            "type": "string",
+            "example": "secret123"
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ]
+      },
+      "UserInTokenDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "665f1b2c3d4e5f6789abcdef"
+          },
+          "email": {
+            "type": "string",
+            "example": "user@example.com"
+          },
+          "username": {
+            "type": "string",
+            "example": "johndoe"
+          },
+          "role": {
+            "type": "string",
+            "example": "user",
+            "enum": [
+              "user",
+              "admin"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "username",
+          "role"
+        ]
+      },
+      "LoginResponseDto": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Login successful"
+          },
+          "accessToken": {
+            "type": "string",
+            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+          },
+          "refreshToken": {
+            "type": "string",
+            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+          },
+          "user": {
+            "$ref": "#/components/schemas/UserInTokenDto"
+          }
+        },
+        "required": [
+          "message",
+          "accessToken",
+          "refreshToken",
+          "user"
+        ]
+      },
+      "RefreshResponseDto": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Token refreshed"
+          },
+          "accessToken": {
+            "type": "string",
+            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+          }
+        },
+        "required": [
+          "message",
+          "accessToken"
+        ]
+      },
+      "ForgotPasswordDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "example": "user@example.com"
+          }
+        },
+        "required": [
+          "email"
+        ]
+      },
+      "ForgotPasswordResponseDto": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Si un compte existe pour cet email, un code a été envoyé."
+          }
+        },
+        "required": [
+          "message"
+        ]
+      },
+      "VerifyResetCodeDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "example": "user@example.com"
+          },
+          "code": {
+            "type": "string",
+            "example": "482913",
+            "description": "Code à 6 chiffres reçu par email"
+          }
+        },
+        "required": [
+          "email",
+          "code"
+        ]
+      },
+      "VerifyResetCodeResponseDto": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Code vérifié"
+          },
+          "resetToken": {
+            "type": "string",
+            "example": "Qm9uam91ciBOb2xpIQ...",
+            "description": "Valable 10 minutes, une seule fois"
+          },
+          "expiresAt": {
+            "type": "string",
+            "example": "2026-10-06T10:20:00.000Z"
+          }
+        },
+        "required": [
+          "message",
+          "resetToken",
+          "expiresAt"
+        ]
+      },
+      "ResetPasswordDto": {
+        "type": "object",
+        "properties": {
+          "resetToken": {
+            "type": "object",
+            "example": "Qm9uam91ciBOb2xpIQ...",
+            "description": "Jeton reçu de /auth/password/verify-code"
+          },
+          "newPassword": {
+            "type": "string",
+            "example": "nouveauMotDePasse",
+            "minLength": 6,
+            "maxLength": 72
+          }
+        },
+        "required": [
+          "resetToken",
+          "newPassword"
+        ]
+      },
+      "RegisterDeviceDto": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "description": "Jeton FCM du téléphone"
+          },
+          "platform": {
+            "type": "string",
+            "enum": [
+              "android",
+              "ios"
+            ],
+            "example": "android"
+          },
+          "appVersion": {
+            "type": "string",
+            "example": "1.0.0"
+          }
+        },
+        "required": [
+          "token",
+          "platform"
+        ]
+      },
+      "UnregisterDeviceDto": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "description": "Jeton FCM à retirer"
+          }
+        },
+        "required": [
+          "token"
+        ]
+      },
+      "UpdatePrefsDto": {
+        "type": "object",
+        "properties": {
+          "newEpisodes": {
+            "type": "boolean",
+            "example": true
+          },
+          "newSeries": {
+            "type": "boolean",
+            "example": true
+          },
+          "premium": {
+            "type": "boolean",
+            "example": true
+          },
+          "payment": {
+            "type": "boolean",
+            "example": true
+          }
+        }
+      },
+      "CreateSeriesDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "example": "Breaking Bad"
+          },
+          "description": {
+            "type": "string",
+            "example": "A chemistry teacher turned drug lord."
+          },
+          "coverImage": {
+            "type": "string",
+            "example": "https://cdn.example.com/cover.jpg"
+          },
+          "bannerImage": {
+            "type": "string",
+            "example": "https://cdn.example.com/banner.jpg"
+          },
+          "categoryIds": {
+            "example": [
+              "665f1b2c3d4e5f6789abcdef"
+            ],
+            "description": "Ids de catégories (au moins une, voir GET /categories)",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "languages": {
+            "example": [
+              "English",
+              "French"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "country": {
+            "type": "string",
+            "example": "USA"
+          },
+          "releaseYear": {
+            "type": "number",
+            "example": 2008
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ongoing",
+              "completed"
+            ],
+            "example": "completed"
+          },
+          "isPremium": {
+            "type": "boolean",
+            "example": false,
+            "default": false,
+            "description": "Série réservée aux abonnés premium"
+          },
+          "freeEpisodeCount": {
+            "type": "number",
+            "example": 0,
+            "minimum": 0,
+            "default": 0,
+            "description": "Nombre d'épisodes gratuits en aperçu, si la série est premium"
+          }
+        },
+        "required": [
+          "title",
+          "categoryIds"
+        ]
+      },
+      "UpdateSeriesAccessDto": {
+        "type": "object",
+        "properties": {
+          "isPremium": {
+            "type": "boolean",
+            "example": true,
+            "description": "Série réservée aux abonnés premium"
+          },
+          "freeEpisodeCount": {
+            "type": "number",
+            "example": 3,
+            "minimum": 0,
+            "description": "Nombre d'épisodes gratuits en aperçu (ordre saison puis épisode), si la série est premium"
+          }
+        }
+      },
+      "CreateEpisodeDto": {
+        "type": "object",
+        "properties": {
+          "episodeNumber": {
+            "type": "number",
+            "example": 1,
+            "minimum": 1
+          },
+          "seasonNumber": {
+            "type": "number",
+            "example": 1,
+            "minimum": 1
+          },
+          "title": {
+            "type": "string",
+            "example": "Pilot"
+          },
+          "description": {
+            "type": "string",
+            "example": "Walter White meets Jesse Pinkman."
+          },
+          "videoUrl": {
+            "type": "string",
+            "example": "https://cdn.example.com/episode1.mp4",
+            "description": "Lien vidéo hébergé ailleurs (ancien mode, non protégé). Préférer les routes video/upload ou video/import."
+          },
+          "duration": {
+            "type": "number",
+            "example": 3600,
+            "minimum": 1,
+            "description": "Duration in seconds"
+          },
+          "releaseDate": {
+            "type": "string",
+            "example": "2008-01-20T00:00:00.000Z"
+          }
+        },
+        "required": [
+          "episodeNumber",
+          "seasonNumber",
+          "title",
+          "duration"
+        ]
+      },
+      "UpdateSeriesDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "example": "Breaking Bad"
+          },
+          "description": {
+            "type": "object",
+            "nullable": true
+          },
+          "coverImage": {
+            "type": "object",
+            "nullable": true,
+            "example": "https://cdn.example.com/cover.jpg"
+          },
+          "bannerImage": {
+            "type": "object",
+            "nullable": true,
+            "example": "https://cdn.example.com/banner.jpg"
+          },
+          "languages": {
+            "example": [
+              "Français",
+              "English"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "country": {
+            "type": "object",
+            "nullable": true,
+            "example": "Bénin"
+          },
+          "releaseYear": {
+            "type": "number",
+            "example": 2024,
+            "minimum": 1888,
+            "maximum": 2100
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ongoing",
+              "completed"
+            ]
+          },
+          "categoryIds": {
+            "description": "Ids de catégories (au moins une)",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "isPremium": {
+            "type": "boolean",
+            "description": "Série réservée aux abonnés premium"
+          },
+          "freeEpisodeCount": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Nombre d'épisodes gratuits en aperçu"
+          }
+        }
+      },
+      "UpdateEpisodeDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "example": "Pilote"
+          },
+          "description": {
+            "type": "object",
+            "nullable": true,
+            "description": "null pour effacer"
+          },
+          "duration": {
+            "type": "number",
+            "example": 3600,
+            "minimum": 1,
+            "description": "Durée en secondes"
+          },
+          "releaseDate": {
+            "type": "string",
+            "example": "2026-01-20T00:00:00.000Z"
+          }
+        }
+      },
+      "RequestVideoUploadDto": {
+        "type": "object",
+        "properties": {
+          "uploadLength": {
+            "type": "number",
+            "example": 157286400,
+            "minimum": 1,
+            "maximum": 32212254720,
+            "description": "Taille du fichier en octets. Jusqu’à 200 Mo : un envoi simple (method \"post\"). Au delà : un envoi reprenable (method \"tus\")."
+          }
+        },
+        "required": [
+          "uploadLength"
+        ]
+      },
+      "ImportVideoDto": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "example": "https://cdn.example.com/episode1.mp4",
+            "description": "Lien public https du fichier vidéo ; Cloudflare le télécharge lui même."
+          }
+        },
+        "required": [
+          "url"
+        ]
+      },
+      "CreateCategoryDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Comédie romantique",
+            "maxLength": 50
+          },
+          "description": {
+            "type": "string",
+            "example": "Des histoires d’amour qui font sourire.",
+            "maxLength": 300
+          },
+          "imageUrl": {
+            "type": "string",
+            "example": "https://cdn.example.com/categories/comedie.jpg"
+          },
+          "isVisible": {
+            "type": "boolean",
+            "example": true,
+            "default": true
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "ReorderCategoriesDto": {
+        "type": "object",
+        "properties": {
+          "ids": {
+            "description": "Tous les ids de catégories, chacun une fois, dans le nouvel ordre",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "ids"
+        ]
+      },
+      "UpdateCategoryDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Comédies romantiques",
+            "maxLength": 50
+          },
+          "description": {
+            "type": "object",
+            "nullable": true,
+            "description": "null pour effacer"
+          },
+          "imageUrl": {
+            "type": "object",
+            "nullable": true,
+            "description": "null pour effacer"
+          },
+          "isVisible": {
+            "type": "boolean",
+            "example": false
+          },
+          "slug": {
+            "type": "string",
+            "example": "comedies-romantiques",
+            "description": "Ne change que si fourni explicitement (renommer ne change pas le slug)"
+          }
+        }
+      },
+      "AddToWatchHistoryDto": {
+        "type": "object",
+        "properties": {
+          "seriesId": {
+            "type": "string",
+            "example": "665f1b2c3d4e5f6789abcdef"
+          },
+          "episodeNumber": {
+            "type": "number",
+            "example": 1,
+            "minimum": 1
+          },
+          "seasonNumber": {
+            "type": "number",
+            "example": 1,
+            "minimum": 1
+          },
+          "title": {
+            "type": "string",
+            "example": "Pilot"
+          },
+          "watchedDuration": {
+            "type": "number",
+            "example": 1200,
+            "minimum": 0,
+            "description": "Watched duration in seconds"
+          },
+          "totalDuration": {
+            "type": "number",
+            "example": 3600,
+            "minimum": 0,
+            "description": "Total duration in seconds"
+          },
+          "progressPercentage": {
+            "type": "number",
+            "example": 33,
+            "minimum": 0,
+            "maximum": 100,
+            "description": "Progress percentage 0-100"
+          }
+        },
+        "required": [
+          "seriesId",
+          "episodeNumber",
+          "seasonNumber",
+          "title"
+        ]
+      },
+      "KkiapayWebhookDto": {
+        "type": "object",
+        "properties": {
+          "transactionId": {
+            "type": "string",
+            "example": "3iH6wjHJ3"
+          },
+          "event": {
+            "type": "string",
+            "example": "transaction.success",
+            "enum": [
+              "transaction.success",
+              "transaction.failed"
+            ]
+          },
+          "isPaymentSucces": {
+            "type": "boolean",
+            "example": true
+          },
+          "account": {
+            "type": "object",
+            "example": "22996000000",
+            "nullable": true
+          },
+          "method": {
+            "type": "string",
+            "example": "MOBILE_MONEY"
+          },
+          "amount": {
+            "type": "number",
+            "example": 1000
+          },
+          "fees": {
+            "type": "number",
+            "example": 19
+          },
+          "partnerId": {
+            "type": "string",
+            "example": "a1b2c3"
+          },
+          "performedAt": {
+            "type": "string",
+            "example": "2024-03-20T08:55:22.883Z"
+          },
+          "stateData": {
+            "type": "object"
+          },
+          "failureCode": {
+            "type": "string",
+            "description": "Present when event is transaction.failed"
+          },
+          "failureMessage": {
+            "type": "string",
+            "description": "Present when event is transaction.failed"
+          }
+        },
+        "required": [
+          "transactionId",
+          "event",
+          "isPaymentSucces",
+          "amount"
+        ]
+      },
+      "CreateDevPendingCheckoutDto": {
+        "type": "object",
+        "properties": {
+          "expectedAmount": {
+            "type": "number",
+            "example": 1000,
+            "minimum": 1,
+            "description": "Montant attendu pour ce paiement KkiaPay"
+          }
+        },
+        "required": [
+          "expectedAmount"
+        ]
+      }
+    }
+  }
+}

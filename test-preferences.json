@@ -1,0 +1,9 @@
+{
+  "tool": "jest",
+  "gate": null,
+  "additionalTools": ["supertest"],
+  "e2eTool": "none",
+  "testDir": "beside the source",
+  "filePattern": "*.spec.ts",
+  "packageManager": "npm"
+}

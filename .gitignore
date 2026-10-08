@@ -1,0 +1,17 @@
+# Dependencies and build output
+node_modules/
+dist/
+coverage/
+
+# Secrets: never commit
+.env
+.env.*
+!.env.example
+*.pem
+*-firebase-adminsdk*.json
+service-account*.json
+
+# Local tooling
+.claude/settings.local.json
+docs/.agent-cache/
+*.log
