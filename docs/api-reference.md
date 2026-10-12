@@ -5,9 +5,13 @@ _Mise à jour le 2026-10-02, écrite depuis le code réel (`src/**/*.controller.
 ## 1. Règles générales
 
 ### URL de base
+- **Production : `https://api.nollli.com`** (hébergée sur Render ; ne jamais utiliser l'adresse `onrender.com` dans l'app)
 - Local : `http://localhost:3000`
 - Téléphone sur le même Wi Fi : `http://<IP du PC>:3000` (exemple : `http://192.168.100.31:3000`)
-- Depuis l'extérieur : l'URL `https://...` d'un tunnel (ngrok)
+- Documentation interactive : `https://api.nollli.com/api/docs` (peut être fermée au lancement public avec `SWAGGER_ENABLED=false`)
+
+### Appels depuis un site web (CORS)
+Seuls les sites listés dans la variable `CORS_ORIGINS` du serveur peuvent appeler l'API depuis un navigateur, par exemple `https://admin.nollli.com` pour le dashboard. L'app mobile n'est pas concernée.
 
 Aucun préfixe de version (`/api/v1` n'existe pas) : les chemins ci dessous s'ajoutent directement à l'URL de base.
 

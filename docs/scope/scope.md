@@ -25,6 +25,7 @@ _These are recommendations to keep your build orderly, not requirements. Skip an
 | 17 | Image Upload Hardening | Stabilize | planned |
 | 18 | API Docs Refresh | Stabilize | in-progress |
 | 19 | Demo Seed Data | Stabilize | done |
+| 22 | Custom Domain & DNS | Stabilize | in-progress |
 | 1 | Payment Provider Integration & Webhooks | Slice 1 | in-progress |
 | 2 | Content Gating for Premium | Slice 1 | done |
 | 3 | Subscription Checkout & Plan Management | Slice 1 | planned |
@@ -169,6 +170,18 @@ code in `scripts/seed-demo.ts` (`npm run db:seed-demo`, `-- --remove`, `-- --res
 - [x] Build it: `/develop demo seed data`
 - [x] Verify it: `/check verify demo seed data` (2026-10-03: 13/13 checks through the live API; reset removed only the recorded data)
 
+### 22. Custom Domain & DNS · in-progress · Alpha
+Put Noli on its own domain, `nollli.com` (bought on Hostinger, 2026-10-12): a stable API address instead of the Render URL, a sender domain for emails, and room for the dashboard and a public site.
+**Done when:** the API answers over HTTPS on its own subdomain (the app, the dashboard and the payment and video webhooks use it), emails leave from an address on the domain with SPF, DKIM and DMARC passing, the dashboard origin is allowed by CORS, and the Render URL is no longer referenced anywhere.
+spec [0009](../specs/0009-custom-domain-dns.md) · code in `src/http-config.ts`, `src/main.ts`
+- [x] Design it (spec): `/architect custom domain & dns`
+- [ ] Build it: `/develop custom domain & dns`
+  - [x] `api.nollli.com` live on Render with HTTPS, app pointed to it; webhooks follow when KkiaPay and Stream go live (satisfies AC-1, AC-2, AC-3)
+  - [ ] Email on the domain: Brevo authenticated, one SPF, DMARC, `support@` mailbox (satisfies AC-4, AC-5, AC-6)
+  - [ ] Backend switches `CORS_ORIGINS` and `SWAGGER_ENABLED` (satisfies AC-7, AC-8)
+  - [ ] Cleanup: no Render URL left, renewal and two factor login on (satisfies AC-9)
+- [ ] Verify it: `/check verify custom domain & dns`
+
 ## Slice 1: Monetize subscriptions
 
 ### 1. Payment Provider Integration & Webhooks
@@ -283,6 +296,7 @@ spec [0008](../specs/0008-push-notifications/index.md) · code in `src/notificat
 Out of scope for this pass, kept so the plan stays honest.
 - **Admin dashboard UI**: a dedicated content management screen on top of the admin API (features 11 to 14) · needs a decision
 - **Catalog and discovery expansion**: search upgrade, reviews · needs a decision
+- **Public site and legal pages** (from feature 22): a landing page on the domain, plus a privacy policy, terms of use, and an account deletion page. Google Play and the App Store require the privacy policy URL (and Google Play an account deletion URL) before publishing the app · needs a decision
 - **Media orphan sweep** (from specs 0005 and 0006): a periodic cleanup of Cloudinary images and Cloudflare videos that no document references, worth adding if the logs show failed deletes · needs a decision
 
 ## Legend

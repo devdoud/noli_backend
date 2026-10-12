@@ -4,6 +4,7 @@ import { SwaggerModule } from '@nestjs/swagger';
 import { Logger, ValidationPipe } from '@nestjs/common';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { buildSwaggerDocument } from './swagger.config';
+import { corsOptions, parseCorsOrigins, swaggerEnabled } from './http-config';
 
 async function bootstrap() {
   // rawBody keeps the exact request bytes for webhook signatures (spec 0006);
@@ -24,28 +25,41 @@ async function bootstrap() {
     );
   }
 
+  // Browser origins allowed to call the API, e.g. the dashboard (spec 0009).
+  // Empty: no CORS at all; the mobile app does not need it.
+  const corsOrigins = parseCorsOrigins(process.env.CORS_ORIGINS);
+  if (corsOrigins.length > 0) {
+    app.enableCors(corsOptions(corsOrigins));
+  }
+
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
 
-  const document = buildSwaggerDocument(app);
+  // SWAGGER_ENABLED=false closes the public docs (spec 0009 AC-8).
+  const docsOn = swaggerEnabled(process.env.SWAGGER_ENABLED);
+  if (docsOn) {
+    const document = buildSwaggerDocument(app);
 
-  SwaggerModule.setup('api/docs', app, document, {
-    customSiteTitle: 'Noli API Docs',
-    swaggerOptions: {
-      persistAuthorization: true,
-      displayRequestDuration: true,
-      docExpansion: 'none',
-      filter: true,
-      showExtensions: true,
-      tryItOutEnabled: true,
-      tagsSorter: 'alpha',
-      operationsSorter: 'alpha'
-    }
-  });
+    SwaggerModule.setup('api/docs', app, document, {
+      customSiteTitle: 'Noli API Docs',
+      swaggerOptions: {
+        persistAuthorization: true,
+        displayRequestDuration: true,
+        docExpansion: 'none',
+        filter: true,
+        showExtensions: true,
+        tryItOutEnabled: true,
+        tagsSorter: 'alpha',
+        operationsSorter: 'alpha'
+      }
+    });
+  }
 
   const port = process.env.PORT ?? 3000;
   await app.listen(port);
 
   console.log(`Application is running on: http://localhost:${port}`);
-  console.log(`Swagger docs available at: http://localhost:${port}/api/docs`);
+  if (docsOn) {
+    console.log(`Swagger docs available at: http://localhost:${port}/api/docs`);
+  }
 }
 bootstrap();
