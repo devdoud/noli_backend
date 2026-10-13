@@ -169,7 +169,7 @@ export class Series extends Document {
 
 export const SeriesSchema = SchemaFactory.createForClass(Series);
 
-SeriesSchema.index({ title: 1 });
+// title is already indexed (unique) by its @Prop; no second index here.
 SeriesSchema.index({ categoryIds: 1 });
 SeriesSchema.index({ rating: -1 });
 SeriesSchema.index({ createdAt: -1 });
