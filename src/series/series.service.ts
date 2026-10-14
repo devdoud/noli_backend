@@ -30,6 +30,7 @@ import {
   UpdateEpisodeDto,
 } from './dto/update-episode.dto';
 import {
+  ADMIN_CATEGORY_POPULATE,
   CATEGORY_POPULATE,
   PREMIUM_REQUIRED,
   canPlay,
@@ -194,7 +195,7 @@ export class SeriesService {
       const video = await this.streamClient.getVideo(ep.pendingStreamUid);
       await this.videoState.applyStreamState({ ...video, uid: ep.pendingStreamUid });
     }
-    return this.findPopulated(id);
+    return this.findAdminPopulated(id);
   }
 
   // DELETE .../video (AC-12): database first, so a deleted video is never
@@ -211,7 +212,7 @@ export class SeriesService {
       videoUrl?: string | null;
     };
     if (!ep.streamUid && !ep.pendingStreamUid && !ep.videoUrl) {
-      return this.findPopulated(id);
+      return this.findAdminPopulated(id);
     }
     await this.seriesModel.updateOne(
       {
@@ -232,7 +233,7 @@ export class SeriesService {
     );
     await this.streamClient.deleteVideo(ep.streamUid);
     await this.streamClient.deleteVideo(ep.pendingStreamUid);
-    return this.findPopulated(id);
+    return this.findAdminPopulated(id);
   }
 
   // GET /series/:id/admin (AC-10): every episode, and unused upload links
@@ -241,7 +242,7 @@ export class SeriesService {
     if (!isValidObjectId(id)) {
       throw new NotFoundException('Series not found');
     }
-    const series = await this.findPopulated(id);
+    const series = await this.findAdminPopulated(id);
     let changed = false;
     for (const ep of series.episodes as Array<{
       seasonNumber: number;
@@ -252,7 +253,7 @@ export class SeriesService {
     }>) {
       if (await this.videoState.expireUnusedUpload(id, ep)) changed = true;
     }
-    return changed ? this.findPopulated(id) : series;
+    return changed ? this.findAdminPopulated(id) : series;
   }
 
   private assertCanManageVideo(): void {
@@ -347,7 +348,7 @@ export class SeriesService {
       throw this.mapWriteError(err);
     }
 
-    return this.findPopulated(series._id);
+    return this.findAdminPopulated(series._id);
   }
 
   // One route for every editable field (spec 0004 AC-1). runValidators only
@@ -392,7 +393,7 @@ export class SeriesService {
           { $set: set },
           { new: true, runValidators: true },
         )
-        .populate(CATEGORY_POPULATE);
+        .populate(ADMIN_CATEGORY_POPULATE);
     } catch (err) {
       throw this.mapWriteError(err);
     }
@@ -437,7 +438,7 @@ export class SeriesService {
         );
       }
     }
-    return this.findPopulated(id);
+    return this.findAdminPopulated(id);
   }
 
   // PUT /series/:id/cover and /banner (spec 0005 AC-1, AC-6, AC-13).
@@ -459,7 +460,7 @@ export class SeriesService {
             { $set: { [field]: newUrl } },
             { new: true },
           )
-          .populate(CATEGORY_POPULATE),
+          .populate(ADMIN_CATEGORY_POPULATE),
       exists: async () => Boolean(await this.seriesModel.exists({ _id: id })),
       notFoundMessage: 'Series not found',
     });
@@ -480,7 +481,7 @@ export class SeriesService {
             { $set: { [field]: null } },
             { new: true },
           )
-          .populate(CATEGORY_POPULATE),
+          .populate(ADMIN_CATEGORY_POPULATE),
       exists: async () => Boolean(await this.seriesModel.exists({ _id: id })),
       notFoundMessage: 'Series not found',
     });
@@ -553,7 +554,7 @@ export class SeriesService {
         { $set: { 'episodes.$.thumbnail': newUrl } },
         { new: true },
       )
-      .populate(CATEGORY_POPULATE)
+      .populate(ADMIN_CATEGORY_POPULATE)
       .exec();
   }
 
@@ -574,7 +575,7 @@ export class SeriesService {
     if (!isValidObjectId(id)) {
       throw new NotFoundException('Series not found');
     }
-    return this.findPopulated(id);
+    return this.findAdminPopulated(id);
   }
 
   private async loadEpisodeForImage(
@@ -587,7 +588,7 @@ export class SeriesService {
     }
     const series = await this.seriesModel
       .findById(id)
-      .populate(CATEGORY_POPULATE);
+      .populate(ADMIN_CATEGORY_POPULATE);
     const episode = series?.episodes.find(
       (ep) =>
         ep.seasonNumber === seasonNumber && ep.episodeNumber === episodeNumber,
@@ -700,7 +701,7 @@ export class SeriesService {
           },
           { new: true, runValidators: true },
         )
-        .populate(CATEGORY_POPULATE);
+        .populate(ADMIN_CATEGORY_POPULATE);
     } catch (err) {
       throw this.mapWriteError(err);
     }
@@ -752,7 +753,7 @@ export class SeriesService {
           { $set: set },
           { new: true, runValidators: true },
         )
-        .populate(CATEGORY_POPULATE);
+        .populate(ADMIN_CATEGORY_POPULATE);
     } catch (err) {
       throw this.mapWriteError(err);
     }
@@ -807,7 +808,7 @@ export class SeriesService {
         },
         { new: true },
       )
-      .populate(CATEGORY_POPULATE);
+      .populate(ADMIN_CATEGORY_POPULATE);
 
     await this.watchHistoryService.removeEpisodeEverywhere(
       String(seriesId),
@@ -1022,6 +1023,18 @@ export class SeriesService {
     const series = await this.seriesModel
       .findById(id)
       .populate(CATEGORY_POPULATE);
+    if (!series) {
+      throw new NotFoundException('Series not found');
+    }
+    return series;
+  }
+
+  // Admin write and read paths: every category, hidden ones included
+  // (dashboard spec 0005). Viewer paths keep findPopulated.
+  private async findAdminPopulated(id: unknown): Promise<Series> {
+    const series = await this.seriesModel
+      .findById(id)
+      .populate(ADMIN_CATEGORY_POPULATE);
     if (!series) {
       throw new NotFoundException('Series not found');
     }

@@ -77,7 +77,9 @@ describe('Series image routes over HTTP (spec 0005)', () => {
 
     expect(res.body.message).toBe('Series cover updated');
     expect(res.body.series.coverImage).toBe(stored.coverImage);
-    expect(res.body.series.categories).toEqual([{ _id: 'c1', name: 'Drame', slug: 'drame' }]);
+    expect(res.body.series.categories).toEqual([
+      { _id: 'c1', name: 'Drame', slug: 'drame', isVisible: true },
+    ]);
     expect(JSON.stringify(res.body)).not.toContain('videoUrl');
     const [id, field, file] = service.setSeriesImage.mock.calls[0];
     expect([id, field]).toEqual([SERIES, 'coverImage']);

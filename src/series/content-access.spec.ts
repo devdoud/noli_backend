@@ -219,6 +219,58 @@ describe('content-access', () => {
     });
   });
 
+  describe('toAdminSeries categories (dashboard spec 0005)', () => {
+    it('keeps hidden categories with their visibility flag', () => {
+      const result = toAdminSeries({
+        _id: 's1',
+        categoryIds: [
+          { _id: 'c1', name: 'Drame', slug: 'drame', isVisible: true },
+          { _id: 'c2', name: 'Bientôt', slug: 'bientot', isVisible: false },
+        ],
+      });
+
+      expect(result.categories).toEqual([
+        { _id: 'c1', name: 'Drame', slug: 'drame', isVisible: true },
+        { _id: 'c2', name: 'Bientôt', slug: 'bientot', isVisible: false },
+      ]);
+      expect(result).not.toHaveProperty('categoryIds');
+    });
+
+    it('treats a category populated without the flag as visible', () => {
+      const result = toAdminSeries({
+        _id: 's1',
+        categoryIds: [{ _id: 'c1', name: 'Drame', slug: 'drame' }],
+      });
+
+      expect(result.categories).toEqual([
+        { _id: 'c1', name: 'Drame', slug: 'drame', isVisible: true },
+      ]);
+    });
+
+    it('never echoes a raw id from a path that forgot to populate', () => {
+      const result = toAdminSeries({
+        _id: 's1',
+        categoryIds: ['64b000000000000000000001'],
+      });
+
+      expect(result.categories).toEqual([]);
+      expect(JSON.stringify(result)).not.toContain('64b000000000000000000001');
+    });
+
+    it('leaves the viewer shape without the visibility flag', () => {
+      const result = toPublicSeries({
+        _id: 's1',
+        categoryIds: [
+          { _id: 'c1', name: 'Drame', slug: 'drame', isVisible: true },
+        ],
+      });
+
+      expect(result.categories).toEqual([
+        { _id: 'c1', name: 'Drame', slug: 'drame' },
+      ]);
+    });
+  });
+
   describe('playable episodes (spec 0006)', () => {
     // E1 still processing (no video yet), E2 on Cloudflare, E3 a pasted link.
     const mixed = {

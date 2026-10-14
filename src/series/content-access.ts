@@ -204,6 +204,14 @@ export const CATEGORY_POPULATE = {
   match: { isVisible: true },
 };
 
+// Admin responses only (dashboard spec 0005): every category of the series,
+// hidden ones included, so the series form shows and keeps them. Never use it
+// on a viewer route.
+export const ADMIN_CATEGORY_POPULATE = {
+  path: 'categoryIds',
+  select: 'name slug isVisible',
+};
+
 export interface PublicCategoryRef {
   _id: unknown;
   name: string;
@@ -268,9 +276,35 @@ export function toPublicSeriesList(list: unknown[]): PublicSeries[] {
 // The admin shape (spec 0006 AC-10): every episode, playable or not, each
 // with its video status. Used by GET /series/:id/admin and every admin write
 // on episodes, so a new episode without a video still shows up.
+export interface AdminCategoryRef extends PublicCategoryRef {
+  isVisible: boolean;
+}
+
+// Same filtering as toPublicCategories (populated objects only), plus the
+// visibility flag; a category populated without it counts as visible.
+function toAdminCategories(categoryIds: unknown): AdminCategoryRef[] {
+  if (!Array.isArray(categoryIds)) {
+    return [];
+  }
+  return categoryIds
+    .filter(
+      (c): c is PublicCategoryRef & { isVisible?: unknown } =>
+        typeof c === 'object' &&
+        c !== null &&
+        typeof (c as PublicCategoryRef).name === 'string',
+    )
+    .map(({ _id, name, slug, isVisible }) => ({
+      _id,
+      name,
+      slug,
+      isVisible: isVisible !== false,
+    }));
+}
+
 export function toAdminSeries(series: unknown): PublicSeries {
   const plain = toPlain(series);
   const result = toPublicSeries(plain);
+  result.categories = toAdminCategories(plain.categoryIds);
   if (Array.isArray(plain.episodes)) {
     const byKey = new Map(
       plain.episodes.map((ep) => [

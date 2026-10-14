@@ -4,7 +4,7 @@ import { Types } from 'mongoose';
 import { SeriesService, playbackExpiry } from './series.service';
 import { Series } from './schemas/series.schema';
 import { Category } from '../categories/schemas/category.schema';
-import { CATEGORY_POPULATE } from './content-access';
+import { ADMIN_CATEGORY_POPULATE, CATEGORY_POPULATE } from './content-access';
 import { WatchHistoryService } from '../watch-history/watch-history.service';
 import { MediaService } from '../media/media.service';
 import { StreamClient } from '../video/stream.client';
@@ -145,7 +145,7 @@ describe('SeriesService', () => {
       const createArg = mockSeriesModel.create.mock.calls[0][0];
       expect(createArg.categoryIds.map(String)).toEqual([catA, catB]);
       expect(mockSeriesModel.findById).toHaveBeenCalledWith(created._id);
-      expect(reReadChain.populate).toHaveBeenCalledWith(CATEGORY_POPULATE);
+      expect(reReadChain.populate).toHaveBeenCalledWith(ADMIN_CATEGORY_POPULATE);
     });
 
     it('rejects unknown category ids, naming them, without creating', async () => {
@@ -235,7 +235,7 @@ describe('SeriesService', () => {
         { $push: { episodes: episode }, $inc: { totalEpisodes: 1 } },
         { new: true, runValidators: true },
       );
-      expect(chain.populate).toHaveBeenCalledWith(CATEGORY_POPULATE);
+      expect(chain.populate).toHaveBeenCalledWith(ADMIN_CATEGORY_POPULATE);
     });
 
     it('returns 400 when the episode already exists', async () => {
@@ -435,7 +435,7 @@ describe('SeriesService', () => {
           { $set: { isPremium: true } },
           { new: true, runValidators: true },
         );
-        expect(chain.populate).toHaveBeenCalledWith(CATEGORY_POPULATE);
+        expect(chain.populate).toHaveBeenCalledWith(ADMIN_CATEGORY_POPULATE);
       });
 
       it('returns 404 for an unknown series', async () => {
@@ -467,7 +467,7 @@ describe('SeriesService', () => {
         { $set: { title: 'New title', description: null, isPremium: true } },
         { new: true, runValidators: true },
       );
-      expect(chain.populate).toHaveBeenCalledWith(CATEGORY_POPULATE);
+      expect(chain.populate).toHaveBeenCalledWith(ADMIN_CATEGORY_POPULATE);
     });
 
     it('validates and deduplicates categoryIds like create', async () => {

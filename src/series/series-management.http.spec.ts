@@ -94,7 +94,9 @@ describe('Series and episode management over HTTP (spec 0004)', () => {
         categoryIds: [CAT],
       });
       expect(res.text).not.toContain('videoUrl');
-      expect(res.body.series.categories).toEqual([{ _id: CAT, name: 'Drame', slug: 'drame' }]);
+      expect(res.body.series.categories).toEqual([
+        { _id: CAT, name: 'Drame', slug: 'drame', isVisible: true },
+      ]);
     });
 
     it('lets description, images and country be cleared with null', async () => {
