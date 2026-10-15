@@ -109,7 +109,14 @@ describe('StreamClient (spec 0006)', () => {
         maxDurationSeconds: 10800,
         expiry: '2026-10-01T10:00:00.000Z',
         requireSignedURLs: true,
-        meta: { ...META, env: 'development' },
+        // Cloudflare only accepts string values in meta.
+        meta: {
+          name: 'S S1E1 Pilote',
+          seriesId: 's1',
+          seasonNumber: '1',
+          episodeNumber: '1',
+          env: 'development',
+        },
       });
     });
 

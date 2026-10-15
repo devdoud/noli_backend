@@ -268,8 +268,16 @@ export class StreamClient {
     return `https://customer-${this.customerCode}.cloudflarestream.com/${token}/manifest/video.m3u8`;
   }
 
-  private metaWithEnv(meta: StreamMeta): Record<string, unknown> {
-    return { ...meta, env: this.env };
+  // Cloudflare Stream only accepts string values in meta: a number makes
+  // direct_upload answer 400 and the tus meta update fail to decode.
+  private metaWithEnv(meta: StreamMeta): Record<string, string> {
+    return {
+      name: meta.name,
+      seriesId: meta.seriesId,
+      seasonNumber: String(meta.seasonNumber),
+      episodeNumber: String(meta.episodeNumber),
+      env: this.env,
+    };
   }
 
   private base(): string {
