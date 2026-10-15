@@ -148,20 +148,26 @@ export class SeriesService {
   }
 
   // POST .../video/import (AC-2, AC-11).
+  // url null imports the episode's own pasted link (dashboard spec 0006): the
+  // link never leaves the server, so no response ever carries a videoUrl.
   async importVideo(
     id: string,
     seasonNumber: number,
     episodeNumber: number,
-    url: string,
+    url: string | null,
   ): Promise<{ uid: string; pendingStatus: 'processing' }> {
     const { series, episode } = await this.loadEpisodeForImage(
       id,
       seasonNumber,
       episodeNumber,
     );
+    const source = url ?? episode.videoUrl ?? null;
+    if (!source) {
+      throw new BadRequestException('Aucun lien collé à importer');
+    }
     this.assertCanManageVideo();
     const { uid } = await this.streamClient.copyFromUrl({
-      url,
+      url: source,
       meta: this.streamMeta(series, episode, id),
     });
     await this.savePendingVideo(id, seasonNumber, episodeNumber, {

@@ -119,6 +119,29 @@ describe('Episode video routes over HTTP (spec 0006)', () => {
     expect(res.body).toMatchObject({ uid: 'c1', pendingStatus: 'processing' });
   });
 
+  it('imports the stored pasted link with fromPastedLink (dashboard spec 0006)', async () => {
+    service.importVideo.mockResolvedValue({ uid: 'c2', pendingStatus: 'processing' });
+    await request(app.getHttpServer())
+      .post(`${base}/import`)
+      .set('x-test-role', 'admin')
+      .send({ fromPastedLink: true })
+      .expect(201);
+    expect(service.importVideo).toHaveBeenCalledWith(SERIES, 1, 1, null);
+  });
+
+  it.each([
+    ['neither url nor fromPastedLink', {}],
+    ['both url and fromPastedLink', { url: 'https://cdn.example.com/x.mp4', fromPastedLink: true }],
+    ['fromPastedLink false', { fromPastedLink: false }],
+  ])('refuses an import with %s (dashboard spec 0006)', async (_label, body) => {
+    await request(app.getHttpServer())
+      .post(`${base}/import`)
+      .set('x-test-role', 'admin')
+      .send(body)
+      .expect(400);
+    expect(service.importVideo).not.toHaveBeenCalled();
+  });
+
   it('answers 401 without a token and 403 to a viewer, on every video route (AC-14)', async () => {
     await request(app.getHttpServer()).post(`${base}/refresh`).expect(401);
     for (const [method, path] of [

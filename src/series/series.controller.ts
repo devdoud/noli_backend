@@ -9,6 +9,7 @@ import {
   Query,
   UseGuards,
   Request,
+  BadRequestException,
   ForbiddenException,
   ParseIntPipe,
   Put,
@@ -642,11 +643,15 @@ export class SeriesController {
     @Request() req,
   ) {
     this.assertAdmin(req);
+    const hasUrl = dto.url !== undefined;
+    if (hasUrl === (dto.fromPastedLink === true)) {
+      throw new BadRequestException('Donnez url ou fromPastedLink');
+    }
     const result = await this.seriesService.importVideo(
       id,
       seasonNumber,
       episodeNumber,
-      dto.url,
+      dto.url ?? null,
     );
     return { message: 'Video import started', ...result };
   }

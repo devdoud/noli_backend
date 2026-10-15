@@ -954,6 +954,31 @@ describe('SeriesService', () => {
       });
     });
 
+    it('imports the episode\'s own pasted link when no url is given (dashboard spec 0006)', async () => {
+      mockSeriesModel.findById.mockReturnValue(
+        populated(seriesWith({ videoUrl: 'https://old/e1.mp4' })),
+      );
+      mockSeriesModel.findOneAndUpdate.mockResolvedValue({ _id: id });
+      mockStream.copyFromUrl.mockResolvedValue({ uid: 'c2' });
+
+      await expect(service.importVideo(id, 1, 1, null)).resolves.toEqual({
+        uid: 'c2',
+        pendingStatus: 'processing',
+      });
+      expect(mockStream.copyFromUrl).toHaveBeenCalledWith(
+        expect.objectContaining({ url: 'https://old/e1.mp4' }),
+      );
+    });
+
+    it('refuses to import a pasted link the episode does not have (dashboard spec 0006)', async () => {
+      mockSeriesModel.findById.mockReturnValue(populated(seriesWith()));
+
+      await expect(service.importVideo(id, 1, 1, null)).rejects.toThrow(
+        'Aucun lien collé à importer',
+      );
+      expect(mockStream.copyFromUrl).not.toHaveBeenCalled();
+    });
+
     it('refresh reads the pending video from Cloudflare and applies its state (AC-6)', async () => {
       mockSeriesModel.findById.mockReturnValue(
         populated(seriesWith({ pendingStreamUid: 'p1', pendingStatus: 'processing' })),

@@ -1,6 +1,14 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsInt, IsUrl, Max, Min } from 'class-validator';
+import {
+  Equals,
+  IsInt,
+  IsOptional,
+  IsUrl,
+  Max,
+  Min,
+  ValidateIf,
+} from 'class-validator';
 
 // Cloudflare Stream's own upload limit (spec 0006 AC-14).
 export const MAX_UPLOAD_BYTES = 30 * 1024 * 1024 * 1024;
@@ -20,12 +28,24 @@ export class RequestVideoUploadDto {
   uploadLength!: number;
 }
 
+// Exactly one of url or fromPastedLink (dashboard spec 0006): the controller
+// refuses both or neither.
 export class ImportVideoDto {
-  @ApiProperty({
+  @ApiPropertyOptional({
     example: 'https://cdn.example.com/episode1.mp4',
     description:
       'Lien public https du fichier vidéo ; Cloudflare le télécharge lui même.',
   })
+  @ValidateIf((o: ImportVideoDto) => o.url !== undefined)
   @IsUrl({ protocols: ['https'], require_protocol: true })
-  url!: string;
+  url?: string;
+
+  @ApiPropertyOptional({
+    example: true,
+    description:
+      'Importer le lien collé déjà enregistré sur l’épisode (migration), sans le renvoyer.',
+  })
+  @IsOptional()
+  @Equals(true)
+  fromPastedLink?: boolean;
 }
