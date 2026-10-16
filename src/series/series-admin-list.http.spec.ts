@@ -41,6 +41,7 @@ describe('GET /series/admin over HTTP (dashboard spec 0009)', () => {
   let app: INestApplication;
   const service = {
     listForAdmin: jest.fn(),
+    getAdminStats: jest.fn(),
     getSeriesById: jest.fn(),
   };
 
@@ -179,5 +180,64 @@ describe('GET /series/admin over HTTP (dashboard spec 0009)', () => {
     expect(viewer.status).toBe(403);
     expect(anonymous.status).toBe(401);
     expect(service.listForAdmin).not.toHaveBeenCalled();
+  });
+
+  describe('videos to process (dashboard spec 0010)', () => {
+    it('passes video=todo and keeps videosToProcess on each row', async () => {
+      service.listForAdmin.mockResolvedValue({
+        total: 1,
+        page: 1,
+        limit: 20,
+        series: [{ ...listed, videosToProcess: 3 }],
+      });
+
+      const res = await admin(
+        http().get('/series/admin').query({ video: 'todo' }),
+      );
+
+      expect(res.status).toBe(200);
+      expect(service.listForAdmin).toHaveBeenCalledWith(
+        expect.objectContaining({ video: 'todo' }),
+      );
+      expect(res.body.data.series[0].videosToProcess).toBe(3);
+    });
+
+    it('refuses another video value with 400', async () => {
+      const res = await admin(
+        http().get('/series/admin').query({ video: 'all' }),
+      );
+
+      expect(res.status).toBe(400);
+      expect(service.listForAdmin).not.toHaveBeenCalled();
+    });
+
+    it('answers GET /series/admin/stats with the counts', async () => {
+      const stats = {
+        series: 12,
+        episodes: 140,
+        videosToProcess: { total: 7, none: 2, error: 1, pending: 0, legacy: 4 },
+      };
+      service.getAdminStats.mockResolvedValue(stats);
+
+      const res = await admin(http().get('/series/admin/stats'));
+
+      expect(res.status).toBe(200);
+      expect(res.body).toEqual({
+        message: 'Series stats retrieved',
+        data: stats,
+      });
+      expect(service.getSeriesById).not.toHaveBeenCalled();
+    });
+
+    it('refuses the stats to a viewer with 403 and an anonymous caller with 401', async () => {
+      const viewer = await http()
+        .get('/series/admin/stats')
+        .set('x-test-role', 'user');
+      const anonymous = await http().get('/series/admin/stats');
+
+      expect(viewer.status).toBe(403);
+      expect(anonymous.status).toBe(401);
+      expect(service.getAdminStats).not.toHaveBeenCalled();
+    });
   });
 });

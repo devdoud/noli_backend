@@ -58,4 +58,13 @@ export class SeriesAdminQueryDto {
   @IsOptional()
   @IsIn(['true', 'false'])
   premium?: 'true' | 'false';
+
+  @ApiPropertyOptional({
+    enum: ['todo'],
+    description:
+      'todo : séries ayant au moins un épisode dont la vidéo n’est pas prête ; chaque série porte alors videosToProcess',
+  })
+  @IsOptional()
+  @IsIn(['todo'])
+  video?: 'todo';
 }

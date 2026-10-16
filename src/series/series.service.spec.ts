@@ -68,6 +68,7 @@ describe('SeriesService', () => {
       findByIdAndDelete: jest.fn(),
       findOneAndUpdate: jest.fn(),
       exists: jest.fn(),
+      aggregate: jest.fn(),
     };
     mockCategoryModel = { find: jest.fn() };
     mockStream = {
@@ -250,6 +251,96 @@ describe('SeriesService', () => {
       const { $regex } = mockSeriesModel.find.mock.calls[0][0].title;
       expect(new RegExp($regex, 'i').test('Saison (.*')).toBe(true);
       expect(new RegExp($regex, 'i').test('Saison 1')).toBe(false);
+    });
+
+    it('adds no video count and no aggregation without video=todo', async () => {
+      const { result } = run({});
+
+      await expect(result).resolves.toMatchObject({ series: [{ _id: '1' }] });
+      expect(mockSeriesModel.aggregate).not.toHaveBeenCalled();
+    });
+
+    it('video=todo keeps series with a video to process and counts them per row (spec 0010)', async () => {
+      const a = new Types.ObjectId();
+      const b = new Types.ObjectId();
+      const chain = listChain([
+        { _id: a, title: 'A' },
+        { _id: b, title: 'B' },
+      ]);
+      mockSeriesModel.countDocuments.mockResolvedValue(2);
+      mockSeriesModel.find.mockReturnValue(chain);
+      mockSeriesModel.aggregate.mockReturnValue({
+        exec: jest.fn().mockResolvedValue([{ _id: a, videosToProcess: 3 }]),
+      });
+
+      const out = await service.listForAdmin({
+        page: 1,
+        limit: 20,
+        premium: 'true',
+        video: 'todo',
+      } as any);
+
+      const filter = mockSeriesModel.find.mock.calls[0][0];
+      expect(filter).toEqual({
+        isPremium: true,
+        episodes: {
+          $elemMatch: { $or: [{ streamUid: null }, { streamUid: '' }] },
+        },
+      });
+      expect(mockSeriesModel.countDocuments).toHaveBeenCalledWith(filter);
+      expect(chain.select).toHaveBeenCalledWith('-episodes');
+      const [pipeline] = mockSeriesModel.aggregate.mock.calls[0];
+      expect(pipeline[0]).toEqual({ $match: { _id: { $in: [a, b] } } });
+      expect(out.series).toEqual([
+        { _id: a, title: 'A', videosToProcess: 3 },
+        { _id: b, title: 'B', videosToProcess: 0 },
+      ]);
+    });
+
+    it('video=todo on an empty page skips the count', async () => {
+      mockSeriesModel.countDocuments.mockResolvedValue(0);
+      mockSeriesModel.find.mockReturnValue(listChain([]));
+
+      const out = await service.listForAdmin({
+        page: 1,
+        limit: 20,
+        video: 'todo',
+      } as any);
+
+      expect(out.series).toEqual([]);
+      expect(mockSeriesModel.aggregate).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('getAdminStats (dashboard spec 0010)', () => {
+    const grouped = (rows: unknown[]) =>
+      mockSeriesModel.aggregate.mockReturnValue({
+        exec: jest.fn().mockResolvedValue(rows),
+      });
+
+    it('returns the counts with their total', async () => {
+      mockSeriesModel.countDocuments.mockResolvedValue(12);
+      grouped([
+        { _id: null, episodes: 140, none: 2, error: 1, pending: 3, legacy: 4 },
+      ]);
+
+      await expect(service.getAdminStats()).resolves.toEqual({
+        series: 12,
+        episodes: 140,
+        videosToProcess: { total: 10, none: 2, error: 1, pending: 3, legacy: 4 },
+      });
+      expect(mockSeriesModel.countDocuments).toHaveBeenCalledWith({});
+    });
+
+    it('gives zeros when there is no episode', async () => {
+      mockSeriesModel.countDocuments.mockResolvedValue(3);
+      grouped([]);
+
+      await expect(service.getAdminStats()).resolves.toEqual({
+        series: 3,
+        episodes: 0,
+        videosToProcess: { total: 0, none: 0, error: 0, pending: 0, legacy: 0 },
+      });
     });
   });
 

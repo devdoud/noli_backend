@@ -126,7 +126,7 @@ export class SeriesController {
   @ApiOperation({
     summary: 'Liste des séries pour le dashboard, filtrée (admin uniquement)',
     description:
-      'Filtres combinés : titre (sans accents ni majuscules), catégorie (masquées comprises), accès. Tri : plus récentes d’abord. Les catégories des séries incluent les masquées, avec isVisible.',
+      'Filtres combinés : titre (sans accents ni majuscules), catégorie (masquées comprises), accès, vidéos à traiter. Tri : plus récentes d’abord. Les catégories des séries incluent les masquées, avec isVisible. Avec video=todo, chaque série porte videosToProcess.',
   })
   @ApiResponse({
     status: 200,
@@ -149,6 +149,29 @@ export class SeriesController {
         ...result,
         series: result.series.map((series) => toAdminSeries(series)),
       },
+    };
+  }
+
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({
+    summary: 'Chiffres de la vue d’ensemble du dashboard (admin uniquement)',
+    description:
+      'Nombre de séries, d’épisodes, et d’épisodes dont la vidéo n’est pas prête, par état (none, error, pending, legacy), calculés à la lecture.',
+  })
+  @ApiResponse({
+    status: 200,
+    description:
+      '{ message, data: { series, episodes, videosToProcess: { total, none, error, pending, legacy } } }',
+  })
+  @ApiResponse({ status: 401, description: 'Non authentifié' })
+  @ApiResponse({ status: 403, description: 'Forbidden - admin only' })
+  @UseGuards(JwtAuthGuard)
+  @Get('admin/stats')
+  async getAdminStats(@Request() req) {
+    this.assertAdmin(req);
+    return {
+      message: 'Series stats retrieved',
+      data: await this.seriesService.getAdminStats(),
     };
   }
 

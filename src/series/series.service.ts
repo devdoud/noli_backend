@@ -22,6 +22,13 @@ import { ImageSlot } from '../media/image-slots';
 import { CreateSeriesDto } from './dto/create-series.dto';
 import { CreateEpisodeDto } from './dto/create-episode.dto';
 import { SeriesAdminQueryDto } from './dto/series-admin-query.dto';
+import {
+  notReadyMatch,
+  SeriesStats,
+  seriesStatsPipeline,
+  VideosToProcess,
+  videosToProcessPipeline,
+} from './video-status-query';
 import { UpdateSeriesAccessDto } from './dto/update-series-access.dto';
 import {
   EDITABLE_SERIES_FIELDS,
@@ -646,7 +653,7 @@ export class SeriesService {
     limit: number;
     series: Series[];
   }> {
-    const { page, limit, q, categoryId, premium } = query;
+    const { page, limit, q, categoryId, premium, video } = query;
     const filter: QueryFilter<Series> = {};
     if (q !== undefined) {
       filter.title = { $regex: accentInsensitivePattern(q), $options: 'i' };
@@ -656,6 +663,7 @@ export class SeriesService {
     }
     if (premium === 'true') filter.isPremium = true;
     if (premium === 'false') filter.isPremium = { $ne: true };
+    if (video === 'todo') filter.episodes = notReadyMatch;
 
     const total = await this.seriesModel.countDocuments(filter);
     const series = await this.seriesModel
@@ -668,7 +676,61 @@ export class SeriesService {
       .lean()
       .exec();
 
-    return { total, page, limit, series };
+    if (video !== 'todo') return { total, page, limit, series };
+    return {
+      total,
+      page,
+      limit,
+      series: await this.withVideosToProcess(series),
+    };
+  }
+
+  // Dashboard spec 0010: each listed series gets its count of episodes whose
+  // video is not ready, read without sending the episodes themselves.
+  private async withVideosToProcess(series: Series[]): Promise<Series[]> {
+    if (series.length === 0) return series;
+    const counts = await this.seriesModel
+      .aggregate<{ _id: Types.ObjectId; videosToProcess: number }>(
+        videosToProcessPipeline(series.map((s) => s._id)),
+      )
+      .exec();
+    const byId = new Map(counts.map((c) => [String(c._id), c.videosToProcess]));
+    return series.map(
+      (s) =>
+        ({
+          ...(s as object),
+          videosToProcess: byId.get(String(s._id)) ?? 0,
+        }) as unknown as Series,
+    );
+  }
+
+  // Dashboard overview (spec 0010): series, episodes, and episodes whose
+  // video is not ready, by status. Computed at read time, nothing stored.
+  async getAdminStats(): Promise<SeriesStats> {
+    const [series, grouped] = await Promise.all([
+      this.seriesModel.countDocuments({}),
+      this.seriesModel
+        .aggregate<{ episodes: number } & Omit<VideosToProcess, 'total'>>(
+          seriesStatsPipeline(),
+        )
+        .exec(),
+    ]);
+    const row = grouped[0];
+    const none = row?.none ?? 0;
+    const error = row?.error ?? 0;
+    const pending = row?.pending ?? 0;
+    const legacy = row?.legacy ?? 0;
+    return {
+      series,
+      episodes: row?.episodes ?? 0,
+      videosToProcess: {
+        total: none + error + pending + legacy,
+        none,
+        error,
+        pending,
+        legacy,
+      },
+    };
   }
 
   async getSeriesById(id: string): Promise<Series> {
