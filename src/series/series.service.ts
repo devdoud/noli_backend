@@ -10,6 +10,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import {
   Error as MongooseError,
   Model,
+  QueryFilter,
   Types,
   isValidObjectId,
 } from 'mongoose';
@@ -20,6 +21,7 @@ import { MediaService } from '../media/media.service';
 import { ImageSlot } from '../media/image-slots';
 import { CreateSeriesDto } from './dto/create-series.dto';
 import { CreateEpisodeDto } from './dto/create-episode.dto';
+import { SeriesAdminQueryDto } from './dto/series-admin-query.dto';
 import { UpdateSeriesAccessDto } from './dto/update-series-access.dto';
 import {
   EDITABLE_SERIES_FIELDS,
@@ -41,6 +43,7 @@ import {
 import { StreamClient, StreamMeta } from '../video/stream.client';
 import { VideoStateService } from '../video/video-state.service';
 import { NotificationQueue } from '../notifications/notification-queue';
+import { accentInsensitivePattern } from './title-search';
 
 export interface PlayableEpisode {
   seriesId: string;
@@ -633,6 +636,39 @@ export class SeriesService {
       limit,
       series,
     };
+  }
+
+  // Dashboard list (spec 0009): every filter combines, hidden categories
+  // count, and the _id tie break keeps pages stable when createdAt is equal.
+  async listForAdmin(query: SeriesAdminQueryDto): Promise<{
+    total: number;
+    page: number;
+    limit: number;
+    series: Series[];
+  }> {
+    const { page, limit, q, categoryId, premium } = query;
+    const filter: QueryFilter<Series> = {};
+    if (q !== undefined) {
+      filter.title = { $regex: accentInsensitivePattern(q), $options: 'i' };
+    }
+    if (categoryId !== undefined) {
+      filter.categoryIds = new Types.ObjectId(categoryId);
+    }
+    if (premium === 'true') filter.isPremium = true;
+    if (premium === 'false') filter.isPremium = { $ne: true };
+
+    const total = await this.seriesModel.countDocuments(filter);
+    const series = await this.seriesModel
+      .find(filter)
+      .select('-episodes')
+      .populate(ADMIN_CATEGORY_POPULATE)
+      .sort({ createdAt: -1, _id: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .lean()
+      .exec();
+
+    return { total, page, limit, series };
   }
 
   async getSeriesById(id: string): Promise<Series> {

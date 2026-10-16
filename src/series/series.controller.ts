@@ -29,6 +29,7 @@ import { CreateSeriesDto } from './dto/create-series.dto';
 import { CreateEpisodeDto } from './dto/create-episode.dto';
 import { UpdateSeriesAccessDto } from './dto/update-series-access.dto';
 import { UpdateSeriesDto } from './dto/update-series.dto';
+import { SeriesAdminQueryDto } from './dto/series-admin-query.dto';
 import { UpdateEpisodeDto } from './dto/update-episode.dto';
 import {
   ImportVideoDto,
@@ -117,6 +118,37 @@ export class SeriesController {
     return {
       message: 'Search results',
       data: { ...result, series: toPublicSeriesList(result.series) },
+    };
+  }
+
+  // Declared before @Get(':id'), which would otherwise take "admin" for an id.
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({
+    summary: 'Liste des séries pour le dashboard, filtrée (admin uniquement)',
+    description:
+      'Filtres combinés : titre (sans accents ni majuscules), catégorie (masquées comprises), accès. Tri : plus récentes d’abord. Les catégories des séries incluent les masquées, avec isVisible.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: '{ message, data: { total, page, limit, series } }',
+  })
+  @ApiResponse({ status: 400, description: 'Filtre ou pagination invalide' })
+  @ApiResponse({ status: 401, description: 'Non authentifié' })
+  @ApiResponse({ status: 403, description: 'Forbidden - admin only' })
+  @UseGuards(JwtAuthGuard)
+  @Get('admin')
+  async listSeriesForAdmin(
+    @Query() query: SeriesAdminQueryDto,
+    @Request() req,
+  ) {
+    this.assertAdmin(req);
+    const result = await this.seriesService.listForAdmin(query);
+    return {
+      message: 'Series retrieved for admin',
+      data: {
+        ...result,
+        series: result.series.map((series) => toAdminSeries(series)),
+      },
     };
   }
 

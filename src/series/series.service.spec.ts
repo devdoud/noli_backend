@@ -187,6 +187,72 @@ describe('SeriesService', () => {
     });
   });
 
+  describe('listForAdmin (dashboard spec 0009)', () => {
+    const run = (query: Record<string, unknown>) => {
+      const chain = listChain([{ _id: '1' }]);
+      mockSeriesModel.countDocuments.mockResolvedValue(41);
+      mockSeriesModel.find.mockReturnValue(chain);
+      return {
+        chain,
+        result: service.listForAdmin({ page: 1, limit: 20, ...query } as any),
+      };
+    };
+
+    it('lists everything without a filter, newest first with a stable tie break', async () => {
+      const { chain, result } = run({ page: 3, limit: 20 });
+
+      await expect(result).resolves.toEqual({
+        total: 41,
+        page: 3,
+        limit: 20,
+        series: [{ _id: '1' }],
+      });
+      expect(mockSeriesModel.countDocuments).toHaveBeenCalledWith({});
+      expect(mockSeriesModel.find).toHaveBeenCalledWith({});
+      expect(chain.select).toHaveBeenCalledWith('-episodes');
+      expect(chain.populate).toHaveBeenCalledWith(ADMIN_CATEGORY_POPULATE);
+      expect(chain.sort).toHaveBeenCalledWith({ createdAt: -1, _id: -1 });
+      expect(chain.skip).toHaveBeenCalledWith(40);
+      expect(chain.limit).toHaveBeenCalledWith(20);
+    });
+
+    it('combines title, category (hidden ones included) and premium in one filter', async () => {
+      const { result } = run({
+        q: 'comedie',
+        categoryId: catA,
+        premium: 'true',
+      });
+      await result;
+
+      const filter = mockSeriesModel.find.mock.calls[0][0];
+      expect(mockSeriesModel.countDocuments).toHaveBeenCalledWith(filter);
+      expect(filter.isPremium).toBe(true);
+      expect(String(filter.categoryIds)).toBe(catA);
+      expect(filter.title.$options).toBe('i');
+      expect(
+        new RegExp(filter.title.$regex, 'i').test('Comédie romantique'),
+      ).toBe(true);
+    });
+
+    it('free only also matches series without the premium field', async () => {
+      const { result } = run({ premium: 'false' });
+      await result;
+
+      expect(mockSeriesModel.find).toHaveBeenCalledWith({
+        isPremium: { $ne: true },
+      });
+    });
+
+    it('escapes the search text instead of running it as a regex', async () => {
+      const { result } = run({ q: '(.*' });
+      await result;
+
+      const { $regex } = mockSeriesModel.find.mock.calls[0][0].title;
+      expect(new RegExp($regex, 'i').test('Saison (.*')).toBe(true);
+      expect(new RegExp($regex, 'i').test('Saison 1')).toBe(false);
+    });
+  });
+
   describe('getSeriesById', () => {
     it('returns the populated series', async () => {
       const series = { _id: 'test-id', title: 'Test Series' };
