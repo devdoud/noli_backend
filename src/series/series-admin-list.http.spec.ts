@@ -152,6 +152,26 @@ describe('GET /series/admin over HTTP (dashboard spec 0009)', () => {
     expect(res.status).toBe(200);
   });
 
+  it('passes premium=true unchanged for premium series only', async () => {
+    const res = await admin(
+      http().get('/series/admin').query({ premium: 'true' }),
+    );
+
+    expect(res.status).toBe(200);
+    expect(service.listForAdmin).toHaveBeenCalledWith(
+      expect.objectContaining({ premium: 'true' }),
+    );
+  });
+
+  it('refuses an empty or blank search with 400 (the dashboard omits q instead)', async () => {
+    const empty = await admin(http().get('/series/admin').query({ q: '' }));
+    const blank = await admin(http().get('/series/admin').query({ q: '   ' }));
+
+    expect(empty.status).toBe(400);
+    expect(blank.status).toBe(400);
+    expect(service.listForAdmin).not.toHaveBeenCalled();
+  });
+
   it('refuses a viewer with 403 and an anonymous caller with 401', async () => {
     const viewer = await http().get('/series/admin').set('x-test-role', 'user');
     const anonymous = await http().get('/series/admin');
