@@ -6,6 +6,14 @@ import { SeriesSchema } from '../src/series/schemas/series.schema';
 import { UserSchema } from '../src/users/schemas/user.schema';
 import { WatchHistorySchema } from '../src/watch-history/schemas/watch-history.schema';
 import { slugify } from '../src/categories/slugify';
+import {
+  categoryImageRequest,
+  configureCloudinary,
+  ensureDemoImage,
+  ensureDemoImages,
+  episodeImageRequest,
+  seriesImageRequests,
+} from './demo-images';
 
 // Demo data for frontend testing (scope feature 19). Writes through the
 // app's own schemas so defaults and casting match what the API produces.
@@ -17,8 +25,8 @@ import { slugify } from '../src/categories/slugify';
 //   npm run db:seed-demo -- --reset   remove, then add again
 
 const DEMO_PASSWORD = 'NoliDemo2026';
-const IMG = (seed: string, w: number, h: number) =>
-  `https://picsum.photos/seed/noli-${seed}/${w}/${h}`;
+// Images are self hosted on Cloudinary (scripts/demo-images.ts): the first
+// version used picsum.photos, which stopped answering in November 2026.
 // Short public test clips: they play, but are not real episodes.
 const VIDEOS = [
   'https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/720/Big_Buck_Bunny_720_10s_1MB.mp4',
@@ -129,6 +137,9 @@ async function main() {
     return;
   }
 
+  // Fails early, before writing anything, if the Cloudinary keys are missing.
+  configureCloudinary();
+
   // Categories: reuse one that already exists (same name key), never touch it.
   const createdCategoryIds: Types.ObjectId[] = [];
   const categoryIdByName = new Map<string, Types.ObjectId>();
@@ -146,7 +157,7 @@ async function main() {
       nameKey: key,
       slug: key,
       description,
-      imageUrl: IMG(`cat-${key}`, 800, 800),
+      imageUrl: await ensureDemoImage(categoryImageRequest(key, name)),
       isVisible: true,
       displayOrder: order++,
     });
@@ -176,15 +187,23 @@ async function main() {
           duration: 1500 + ((i * 7 + e * 3) % 13) * 90,
           releaseDate: new Date(Date.now() - (60 - e - season * 10) * DAY),
           views: Math.round(s.votes * (12 - e)),
-          thumbnail: IMG(`${key}-s${season}e${e}`, 1280, 720),
         });
       }
     });
+    const images = seriesImageRequests(key, s.title, `${s.country} · ${s.releaseYear}`);
+    const [coverImage, bannerImage, ...thumbnails] = await ensureDemoImages([
+      images.cover,
+      images.banner,
+      ...episodes.map((ep) =>
+        episodeImageRequest(key, s.title, ep.seasonNumber, ep.episodeNumber, ep.title),
+      ),
+    ]);
+    episodes.forEach((ep, n) => (ep.thumbnail = thumbnails[n]));
     const doc = await Series.create({
       title: s.title,
       description: s.description,
-      coverImage: IMG(`${key}-cover`, 1000, 1500),
-      bannerImage: IMG(`${key}-banner`, 1920, 1080),
+      coverImage,
+      bannerImage,
       categoryIds: s.categories.map((name) => categoryIdByName.get(name)!),
       languages: s.languages,
       country: s.country,

@@ -22,6 +22,7 @@
     "db:backfill-series-access": "ts-node scripts/backfill-series-access.ts",
     "db:make-admin": "ts-node scripts/make-admin.ts",
     "db:seed-demo": "ts-node scripts/seed-demo.ts",
+    "db:fix-demo-images": "ts-node scripts/fix-demo-images.ts",
     "stream:create-signing-key": "ts-node scripts/stream-create-signing-key.ts",
     "stream:register-webhook": "ts-node scripts/stream-register-webhook.ts",
     "db:migrate-genres-to-categories": "ts-node scripts/migrate-genres-to-categories.ts"
