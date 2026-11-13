@@ -184,4 +184,13 @@ export class NotificationsController {
     const notification = await this.notifications.markRead(req.user._id, id);
     return { message: 'Notification read', notification };
   }
+
+  @ApiOperation({ summary: 'Supprimer une notification' })
+  @ApiResponse({ status: 200, description: 'Notification supprimée' })
+  @ApiResponse({ status: 404, description: 'Introuvable ou pas à toi' })
+  @Delete(':id')
+  async remove(@Request() req: AuthedRequest, @Param('id') id: string) {
+    await this.notifications.remove(req.user._id, id);
+    return { message: 'Notification deleted' };
+  }
 }

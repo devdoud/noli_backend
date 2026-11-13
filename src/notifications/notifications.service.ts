@@ -151,6 +151,18 @@ export class NotificationsService {
     return toPublicNotification(updated);
   }
 
+  // Removes one of the caller's notifications; another account's id or a
+  // malformed one is a 404, like markRead.
+  async remove(userId: Types.ObjectId, id: string): Promise<void> {
+    if (!isValidObjectId(id)) {
+      throw new NotFoundException('Notification not found');
+    }
+    const res = await this.notificationModel.deleteOne({ _id: id, userId });
+    if (res.deletedCount === 0) {
+      throw new NotFoundException('Notification not found');
+    }
+  }
+
   async markAllRead(userId: Types.ObjectId): Promise<number> {
     const res = await this.notificationModel.updateMany(
       { userId, readAt: null },
